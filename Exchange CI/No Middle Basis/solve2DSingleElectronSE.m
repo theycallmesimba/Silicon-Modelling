@@ -8,6 +8,11 @@ function [ wfs, ens ] = solve2DSingleElectronSE( sparams, XX, YY, VV, numSols )
 
     [eVectors, ens] = eigs(full2DLap,numSols,'sa');
     
+%     % Order output from smallest to largest
+%     [~,perm] = sort(diag(ens));
+%     ens = ens(perm,perm);
+%     eVectors = eVectors(:,perm);
+    
     [ny,nx] = size(XX);
     wfs = zeros(ny,nx,numSols);
     for kk = 1:numSols

@@ -48,8 +48,9 @@ function sparams = solveLinearCombinationHOs( sparams, X, Y, V )
         
         
         % Normalize the wave function
-        sparams.linearCombinationSHOs(ii).wavefunctionMG = tempwf;
-        sparams.linearCombinationSHOs(ii).wavefunctionNO = convertMGtoNO(tempwf);
+        tempNorm = sqrt(getInnerProduct(tempwf,tempwf,X,Y));
+        sparams.linearCombinationSHOs(ii).wavefunctionMG = tempwf/tempNorm;
+        sparams.linearCombinationSHOs(ii).wavefunctionNO = convertMGtoNO(tempwf)/tempNorm;
         sparams.linearCombinationSHOs(ii).energy = en(ii,ii);
     end
 %     

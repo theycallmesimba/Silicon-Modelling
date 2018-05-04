@@ -1,9 +1,9 @@
-function [ wfs, ens ] = solve1DSingleElectronSE( sparams, X, V )
+function [ wfs, ens ] = solve1DSingleElectronSE( sparams, nSols, X, V )
 %SOLVE1DSINGLEELECTRONSE Solves the Schrodinger Equation for a 1D potential
 %function using the Finite Difference Method.
-%   xx = x coordinates in an array (must be same length as potential and
+%   X = x coordinates in an array (must be same length as potential and
 %   have same grid spacing)
-%   potential = potential function values in an array (must be same length
+%   V = potential function values in an array (must be same length
 %   as xx)
 %   solNum = number of solutions to return starting from the ground state
 %   consts = specifies values for calculation (hbar, effective mass,
@@ -12,11 +12,11 @@ function [ wfs, ens ] = solve1DSingleElectronSE( sparams, X, V )
     full1DLap = make1DSELap(sparams,X,V);
 
     % Determine which eigs option to use to get the correct e-vectors
-    [eVectors, ens] = eigs(full1DLap,sparams.nLocalOrbitals,'sa');
+    [eVectors, ens] = eigs(full1DLap,nSols,'sa');
 
-    wfs = zeros(length(X),sparams.nLocalOrbitals);
-    for kk = 1:sparams.nLocalOrbitals
-        wfs(:,kk) = eVectors(:,kk)/sqrt(trapz(X,conj(eVectors(:,kk)).*eVectors(:,kk)));
+    wfs = zeros(length(X),nSols);
+    for ii = 1:nSols
+        wfs(:,ii) = eVectors(:,ii)/sqrt(getInnerProduct(X,eVectors(:,ii),eVectors(:,ii)));
     end
 end
 
