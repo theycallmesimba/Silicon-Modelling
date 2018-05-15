@@ -17,6 +17,12 @@ fprintf(1,'Fitting potentials to localized Harmonic Orbitals...\n');
 % particle wave functions
 sparams = fitDotLocationsToHarmonicWells(sparams,X,Y,V);
 
+% For test purposes, make a 2D Harmonic well centered at the origin
+V = 1/2*sparams.me*sparams.fittedPotentialParameters(1,1)^2*(X.^2 + Y.^2);
+V(V >= 1.5E-19) = 1.5E-19;
+
+% s = surf(X,Y,V);
+% set(s,'edgecolor','none');
 
 fprintf(1,'Building basis of non shifted harmonic orbitals...\n');
 % What we are doing here is the first part of the CME calculation.  We have

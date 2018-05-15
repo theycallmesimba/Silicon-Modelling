@@ -10,11 +10,9 @@ function [ sparams, xxq, zzq ] = loadPotentials( sparams )
     g3 = g2;
 
     % Make the waitbar to show run time
-    h = waitbar(0,sprintf('Loading file:'),...
+    h = waitbar(0,sprintf('On potential %0.3g, %0.3g, %0.3g',g1(1),g2(1),g3(1)),...
         'Name',sprintf('Loading potentials...'),...
         'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-    set(findall(h,'type','text'),'Interpreter','none');
-
     flag = 0;
     
     nn = 1;
@@ -43,8 +41,7 @@ function [ sparams, xxq, zzq ] = loadPotentials( sparams )
 %                     g3String = '_V_R1_1.0';
 %                 end
                 g1String = sprintf('V_L1_%0.2f',g1(ii));
-                g2String = sprintf('_V_C_%0.2f',g2(jj));
-                g3String = sprintf('_V_R1_%0.2f',g3(kk));
+                
 
                 currPotString = [g1String g2String g3String '.csv'];
 

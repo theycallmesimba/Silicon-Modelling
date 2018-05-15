@@ -37,7 +37,7 @@ sparams.ngridx = 0;
 sparams.ngridy = 0;
 % Sets the maximum value for the non shfited HO we will use when we rewrite
 % the basis of shifted HOs into non shifted HOs
-sparams.maxNonShiftedHOsX = 17; 
+sparams.maxNonShiftedHOsX = 3; 
 sparams.maxNonShiftedHOsY = 3;
 sparams.nNonShiftedHOs = ((sparams.maxNonShiftedHOsX+1)*(sparams.maxNonShiftedHOsY+1));
 % Set tolerance level for norm checks

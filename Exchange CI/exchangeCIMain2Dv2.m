@@ -16,6 +16,7 @@ fprintf(1,'Fitting potentials to localized Harmonic Orbitals...\n');
 % functions in the x and y axes to use as a basis for the arbitrary single
 % particle wave functions
 sparams = fitDotLocationsToHarmonicWells(sparams,X,Y,V);
+%%
 
 
 fprintf(1,'Finding 2D localized harmonic orbitals...\n');

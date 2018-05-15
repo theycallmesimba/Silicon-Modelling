@@ -24,16 +24,15 @@ function sparams = getVoltagePulse( sparams, xx )
 %     g3Min = 0.6;
 %     g3Max = 0.8;
 %     ratio = 0.989;
-    sparams.gateLabels = {'V_{L}','V_{C}','V_{R}'};
 
     g1Min = 1.5;
     g1Max = 1.7;
     g2Min = 1.5;
-    g3Min = 1.5;
     g3Max = 1.7;
-    ratio = 0.99;
+    g3Min = 1.7;
+    frac = 0.989;
     
-    [g2Max, ~] = fminbnd(@(x) findMinDeltaE(x),1.5*scaleFactor,1.74*scaleFactor);
+    [g2Max, ~] = fminbnd(@(x) findMinDeltaE(x),.7*scaleFactor,1.02*scaleFactor);
     g2Max = g2Max/scaleFactor;
     function deltaE = findMinDeltaE(g2)
         g2 = g2/scaleFactor;

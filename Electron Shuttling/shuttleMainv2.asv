@@ -64,7 +64,7 @@ if debugHere
     fig = figure;
     hold on;
     for ii = 1:sparams.numOfGates
-        plot(sparams.voltagePulse(ii,:),'Linewidth',1.5);
+        plot(sparams.voltagePulse(ii,:),'Linewidth',2);
     end
     pause(5);
     delete(fig);
@@ -85,7 +85,7 @@ if debugHere
     pause(5);
     delete(fig);
 end
-
+%%
 % Using ref https://arxiv.org/pdf/1306.3247.pdf we now find the time
 % evolution operator U(t + dT,t) to evolve our initial wavefunction to the
 % next wavefunction.  That newly found wavefunction will act as our initial
@@ -347,13 +347,5 @@ if sparams.calculateStarkShift
         drawnow;
     end
 end
-%%
-figure;
-hold on;
-for ii = 1:sparams.numOfGates
-    plot(sparams.voltagePulse(ii,:),'Linewidth',1.5);
-    xlabel('Percentage of total time [\%]','Interpreter','Latex','Fontsize',14);
-    ylabel('Voltage [V]','Interpreter','Latex','Fontsize',14);
-    xlim([1,length(sparams.voltagePulse(1,:))]);
-end
-legend(sparams.gateLabels);
+
+figure
