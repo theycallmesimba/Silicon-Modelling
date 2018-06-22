@@ -8,7 +8,10 @@ function [ wfs, ens ] = solve1DSingleElectronSE( sparams, nSols, X, V )
 %   solNum = number of solutions to return starting from the ground state
 %   consts = specifies values for calculation (hbar, effective mass,
 %   electorn charge, etc)
-    
+%     [~,sparams.twoDEGindZ] = min(abs(zz - (-0.5*1E-9)));
+%     for ii = 1:length(sparams.potentials)
+%         sparams.potentials(ii).pot2DEG = sparams.potentials(ii).pot2D(sparams.twoDEGindZ,:);
+%     end 
     full1DLap = make1DSELap(sparams,X,V);
 
     % Determine which eigs option to use to get the correct e-vectors
@@ -19,8 +22,6 @@ function [ wfs, ens ] = solve1DSingleElectronSE( sparams, nSols, X, V )
         wfs(:,ii) = eVectors(:,ii)/sqrt(getInnerProduct(X,eVectors(:,ii),eVectors(:,ii)));
     end
 end
-
-
 
 
 

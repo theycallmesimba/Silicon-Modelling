@@ -10,30 +10,29 @@ function sparams = getVoltagePulse( sparams, xx )
     % is easily adjustable if we need in the future.
     
     sparams.voltagePulse = zeros(sparams.numOfGates,101);
+
+    % Let's do the first part of the sweep
+    g1Min = 0.6;
+    g1Max = 0.8;
+    g2Min = 0.6;
+    g3Min = 0.6;
+    g3Max = 0.8;
+    ratio = 0.989;
+    sparams.gateLabels = {'V_{L1}','V_{L2}','V_{C}','V_{R2}','V_{R1}'};
+
+%     g1Min = 1.5;
+%     g1Max = 1.7;
+%     g2Min = 1.5; 
+%     g3Min = 1.5;
+%     g3Max = 1.7;
+%     ratio = 0.99;
     
     % Now, we wish to find what value the second gate needs to be so that
     % the tunnel coupling is maximal.  Due to cross capacitances, setting
     % V1 = V2 does not actually mean the detuning is 0.  This short segment
     % finds that value
     scaleFactor = 1000;
-
-    % Let's do the first part of the sweep
-%     g1Min = 0.6;
-%     g1Max = 0.8;
-%     g2Min = 0.6;
-%     g3Min = 0.6;
-%     g3Max = 0.8;
-%     ratio = 0.989;
-    sparams.gateLabels = {'V_{L}','V_{C}','V_{R}'};
-
-    g1Min = 1.5;
-    g1Max = 1.7;
-    g2Min = 1.5;
-    g3Min = 1.5;
-    g3Max = 1.7;
-    ratio = 0.99;
-    
-    [g2Max, ~] = fminbnd(@(x) findMinDeltaE(x),1.5*scaleFactor,1.74*scaleFactor);
+    [g2Max, ~] = fminbnd(@(x) findMinDeltaE(x),0.7*scaleFactor,0.81*scaleFactor);
     g2Max = g2Max/scaleFactor;
     function deltaE = findMinDeltaE(g2)
         g2 = g2/scaleFactor;
@@ -45,19 +44,19 @@ function sparams = getVoltagePulse( sparams, xx )
     
     ind = 1:3;
     gate1p = ones(1,length(ind))*g1Max;
-    gate2p = linspace(g2Min,g2Max*ratio,length(ind));
+    gate2p = linspace(g2Min,ratio*g2Max,length(ind));
     gate3p = ones(1,length(ind))*g3Min;
     
     ind = 3:26;
     temp1 = ones(1,length(ind))*g1Max;
-    temp2 = linspace(g2Max*ratio,g2Max,length(ind));
+    temp2 = linspace(ratio*g2Max,g2Max,length(ind));
     temp3 = ones(1,length(ind))*g3Min;
     gate1p = [gate1p, temp1(2:end)];
     gate2p = [gate2p, temp2(2:end)];
     gate3p = [gate3p, temp3(2:end)];
     
     ind = 26:49;
-    temp1 = linspace(g1Max,g1Max*ratio,length(ind));
+    temp1 = linspace(g1Max,ratio*g1Max,length(ind));
     temp2 = ones(1,length(ind))*g2Max;
     temp3 = ones(1,length(ind))*g3Min;
     gate1p = [gate1p, temp1(2:end)];
@@ -65,7 +64,7 @@ function sparams = getVoltagePulse( sparams, xx )
     gate3p = [gate3p, temp3(2:end)];
     
     ind = 49:51;
-    temp1 = linspace(g1Max*ratio,g1Min,length(ind));
+    temp1 = linspace(ratio*g1Max,g1Min,length(ind));
     temp2 = ones(1,length(ind))*g2Max;
     temp3 = ones(1,length(ind))*g3Min;
     gate1p = [gate1p, temp1(2:end)];
@@ -75,7 +74,7 @@ function sparams = getVoltagePulse( sparams, xx )
     ind = 51:53;
     temp1 = ones(1,length(ind))*g1Min;
     temp2 = ones(1,length(ind))*g2Max;
-    temp3 = linspace(g3Min,g3Max*ratio,length(ind));
+    temp3 = linspace(g3Min,ratio*g3Max,length(ind));
     gate1p = [gate1p, temp1(2:end)];
     gate2p = [gate2p, temp2(2:end)];
     gate3p = [gate3p, temp3(2:end)];
@@ -83,14 +82,14 @@ function sparams = getVoltagePulse( sparams, xx )
     ind = 53:76;
     temp1 = ones(1,length(ind))*g1Min;
     temp2 = ones(1,length(ind))*g2Max;
-    temp3 = linspace(g3Max*ratio,g3Max,length(ind));
+    temp3 = linspace(ratio*g3Max,g3Max,length(ind));
     gate1p = [gate1p, temp1(2:end)];
     gate2p = [gate2p, temp2(2:end)];
     gate3p = [gate3p, temp3(2:end)];
     
     ind = 76:98;
     temp1 = ones(1,length(ind))*g1Min;
-    temp2 = linspace(g2Max,g2Max*ratio,length(ind));
+    temp2 = linspace(g2Max,ratio*g2Max,length(ind));
     temp3 = ones(1,length(ind))*g3Max;
     gate1p = [gate1p, temp1(2:end)];
     gate2p = [gate2p, temp2(2:end)];
@@ -98,7 +97,7 @@ function sparams = getVoltagePulse( sparams, xx )
     
     ind = 98:100;
     temp1 = ones(1,length(ind))*g1Min;
-    temp2 = linspace(g2Max*ratio,g2Min,length(ind));
+    temp2 = linspace(ratio*g2Max,g2Min,length(ind));
     temp3 = ones(1,length(ind))*g3Max;
     gate1p = [gate1p, temp1(2:end)];
     gate2p = [gate2p, temp2(2:end)];
@@ -111,6 +110,7 @@ function sparams = getVoltagePulse( sparams, xx )
     sparams.voltagePulse(1,:) = gate1p;
     sparams.voltagePulse(2,:) = gate2p;
     sparams.voltagePulse(3,:) = gate3p;
+    
 end
 
 

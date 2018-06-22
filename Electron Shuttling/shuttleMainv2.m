@@ -1,11 +1,12 @@
 % Load all the parameters for the simulation
 % dbstop if error;
+
 clear sparams xx vv;
 shuttleParameterFile;
 
 fprintf(1,'Loading potentials...\n');
 [sparams,xx,zz] = loadPotentials(sparams);
-
+%%
 sparams.nxGrid = length(xx);
 sparams.nzGrid = length(zz);
 sparams.dx = xx(2) - xx(1);
@@ -24,14 +25,14 @@ sparams = makePotentialsInterpolants(sparams,xx,zz);
 
 % Check that the potentials were loaded correctly and that the interpolants
 % were correctly assembled
-debugHere = 0;
+debugHere = 1;
 if debugHere && sparams.verbose
-    test = 1.7:0.001:1.74;
+    test = 0.6:0.01:0.8;
 
     fig = figure;
     for ii = 1:length(test)
         clf;
-        testPot = sparams.P2DEGInterpolant({1.0,test(ii),0.7,xx});
+        testPot = sparams.P2DEGInterpolant({0.6,test(ii),0.6,0.7,0.7,xx});
         plot(xx,squeeze(testPot)/sparams.ee);
         pause(0.2);
     end
@@ -39,51 +40,52 @@ if debugHere && sparams.verbose
     
     [XX,ZZ] = meshgrid(xx,zz);
     fig = figure;
-    testPot = sparams.P2DInterpolant({1.0,0.7,0.7,zz,xx});
+    testPot = sparams.P2DInterpolant({0.6,0.6,0.768,0.6,0.6,zz,xx});
     s = surf(XX,ZZ,squeeze(testPot));
     set(s,'edgecolor','none');
     view(2);
     pause(5);
     delete(fig);
 end
-
+%%
 % Plot a random potential and the ground state
-debugHere = 0;
+debugHere = 1;
 if debugHere
     % Plot a random potential and the ground state
-    fig = plotPotentialAndGroundWF(sparams,[1.7,1.6984,1.5],xx);
-    pause(5);
-    delete(fig);
+    fig = plotPotentialAndGroundWF(sparams,[0.6,0.6,0.8,0.8,0.6],xx);
+    %pause(5);
+    %delete(fig);
 end
-
+%%
 % Get our desired votlage pulse.
 sparams = getVoltagePulse(sparams,xx);
 
-debugHere = 1;
+debugHere = 0;
 if debugHere
     fig = figure;
     hold on;
     for ii = 1:sparams.numOfGates
         plot(sparams.voltagePulse(ii,:),'Linewidth',1.5);
     end
-    pause(5);
-    delete(fig);
+%     pause(5);
+%     delete(fig);
 end
-
+%%
 fprintf(1,'Getting initial wavefunction...\n');
 % Solve the 1D SE for the initial potential well to get what our ground
 % state should look like
 vvInterp = squeeze(sparams.P2DEGInterpolant([num2cell(sparams.voltagePulse(:,1)'),...
     mat2cell(xx,1,length(xx))]));
-    
+ 
 [sparams.rho0, ~] = solve1DSingleElectronSE(sparams,1,xx,vvInterp); 
 
+
 % Check that the intial state makes sense
-debugHere = 1;
+debugHere = 0;
 if debugHere
     fig = plotPotentialAndGroundWF(sparams,sparams.voltagePulse(:,1)',xx);
-    pause(5);
-    delete(fig);
+    %pause(5);
+    %delete(fig);
 end
 
 % Using ref https://arxiv.org/pdf/1306.3247.pdf we now find the time
@@ -99,7 +101,7 @@ K2 = K.*K;
 % Make the fidelity array
 maxTime = max(sparams.totalTime);
 maxLength = length(0:sparams.dt:maxTime);
-sparams.fidelity = zeros(length(sparams.totalTime),floor(maxLength/sparams.updateFidelity));
+sparams.fidelity = zeros(length(sparams.totalTime),sparams.nFidelityFrames);
 sparams.starkShift = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
 
 sparams.avgEzGround = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
@@ -107,16 +109,15 @@ sparams.avgEz = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
 sparams.vShiftGround = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
 sparams.vShift = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
 
-for jj = 1:length(sparams.totalTime)
-    
-    % Let's create the folder to save data
-    if jj == 1 && sparams.saveData
-        time = clock;
-        sparams.saveFolder = sprintf('%d%02d%02d%02d%02d%02d',time(1),time(2),time(3),time(4),time(5),round(time(6)));
-        mkdir([sparams.saveDir sparams.saveFolder]);
-        sparams.saveFolder = [sparams.saveFolder '/'];
-    end
+% Let's create the folder to save data
+time = clock;
+sparams.saveFolder = sprintf('%d-%02d-%02d-%02d-%02d-%02d',time(1),time(2),time(3),time(4),time(5),round(time(6)));
+mkdir([sparams.saveDir sparams.saveFolder]);
+sparams.saveFolder = [sparams.saveFolder '/'];
 
+for jj = 1:length(sparams.totalTime)
+    mkdir([sparams.saveDir sparams.saveFolder num2str(sparams.totalTime(jj))]);
+    
     tic;
     
     % Now, we want to associate each potential simulation we have with a time
@@ -133,10 +134,11 @@ for jj = 1:length(sparams.totalTime)
     nTime = length(tTime);
 
     % Get time indices to save figures
-    saveFigureIndices = round(linspace(1,nTime,sparams.nFigureFrames));
+    sparams.saveFigureIndices(jj,:) = round(linspace(1,nTime,sparams.nFigureFrames));
     % Get time indices and corresponding time values to calculate and save starkShift
     sparams.starkShiftIndices(jj,:) = round(linspace(1,nTime,sparams.nStarkShiftFrames));
     sparams.tStarkShift(jj,:) = tTime(sparams.starkShiftIndices(jj,:));
+    sparams.fidelityIndices(jj,:) = round(linspace(1,nTime,sparams.nFidelityFrames));
     
     fprintf(1,'Running shuttling simulation for %E (%d/%d)...\n',sparams.totalTime(jj),jj,length(sparams.totalTime));
 
@@ -147,7 +149,8 @@ for jj = 1:length(sparams.totalTime)
     movegui(h,'northwest');
 
     currPsi = sparams.rho0';
-    shtlEvolutionFig = figure;
+    shtlEvolutionFig = figure('pos',[0 0 1300 550]);
+    movegui(shtlEvolutionFig,'northeast');
     
     nn = 1; % Used to index fidelity array
     mm = 1; % Used to index gif creation
@@ -196,13 +199,6 @@ for jj = 1:length(sparams.totalTime)
         end
         
         currPotential = squeeze(sparams.P2DEGInterpolant({g1(kk),g2(kk),g3(kk),xx}))';
-        
-        % Need to put this somewhere else eventually...
-        if ii == 1
-            sparams.figWFMin = min(currPotential);
-        end
-        
-%         V = exp(-1i*sparams.dt*vvInterp(kk,:)/sparams.hbar);
         V = exp(-1i*sparams.dt*currPotential/sparams.hbar);
 
         % Convert from momentum to position space
@@ -260,7 +256,7 @@ for jj = 1:length(sparams.totalTime)
 
         % Update figure and save to gif according to figure frames
         % parameter
-        if any(saveFigureIndices == ii)
+        if any(sparams.saveFigureIndices(jj,:) == ii)
 %             fprintf(1,'Curr Gate Values %0.6f %0.6f %0.6f\n',g1(kk),g2(kk),g3(kk));
             [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
             
@@ -269,19 +265,23 @@ for jj = 1:length(sparams.totalTime)
                         
             [A,map] = rgb2ind(frame2im(getframe(shtlEvolutionFig)),256);
             if mm == 1
-                imwrite(A,map,[sparams.saveDir sparams.saveFolder...
+                imwrite(A,map,[sparams.saveDir sparams.saveFolder num2str(sparams.totalTime(jj)) '/'...
                     'shuttle' num2str(sparams.totalTime(jj)) '.gif'],...
                     'gif','LoopCount',Inf,'DelayTime',0);
             else
-                imwrite(A,map,[sparams.saveDir sparams.saveFolder...
+                imwrite(A,map,[sparams.saveDir sparams.saveFolder num2str(sparams.totalTime(jj)) '/'...
                     'shuttle' num2str(sparams.totalTime(jj)) '.gif'],...
                     'gif','WriteMode','append','DelayTime',0);
             end
+            
+            % We will also save the individual image frames separately
+            imwrite(A,map,[sparams.saveDir sparams.saveFolder num2str(sparams.totalTime(jj)) '/'...
+                    'frame' num2str(tTime(ii)) '.jpg']);
             mm = mm + 1;
         end
         
         % Calculate fidelity with current ground state every N frames
-        if mod(ii,sparams.updateFidelity) == 0
+        if any(sparams.fidelityIndices(jj,:) == ii)
             currPsiTemp = fftshift(ifft(fftshift(currPsip)));
             % Need to get the ground state of the current potential
             [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
@@ -299,7 +299,7 @@ for jj = 1:length(sparams.totalTime)
     % Close waitbar
     delete(h);
     % Delete currIm
-    clearvars currIm
+    clearvars c˜nNurrIm
     toc;
 end
 
@@ -349,11 +349,73 @@ if sparams.calculateStarkShift
 end
 %%
 figure;
+plot(linspace(0,4,sparams.nStarkShiftFrames),(sparams.vShiftGround(23,:) - sparams.vShiftGround(23,1))*1E-6,'Linewidth',2.5);
+line([0,4],[mean(sparams.vShiftGround(23,:) - sparams.vShiftGround(23,1)),mean(sparams.vShiftGround(23,:) - sparams.vShiftGround(23,1))]*1E-6,...
+    'Linewidth',2.5,'Linestyle','--','Color','red');
+set(gca,'Fontsize',15);
+xlabel('Time [ns]','Interpreter','Latex','Fontsize',24);
+ylabel('$\nu - \nu_0$ [MHz]','Interpreter','Latex','Fontsize',24);
+
+%%
+% Need to get the Singlet decay
+% Get singlet fidelity decay
+
+rho0 = [0;1;-1;0]/sqrt(2);
+rhoIdeal = rho0;
+rhoStark = rho0;
+rhoIdealMean = rho0;
+rhoStarkMean = rho0;
+tIndex = 13;
+
+times = linspace(0,4E-9,sparams.nStarkShiftFrames + 1);
+dt = times(2) - times(1);
+dz = [1,0;0,-1];
+dz1 = kron(dz,eye(2));
+dz2 = kron(eye(2),dz);
+v1 = sparams.vShiftGround(tIndex,1);
+v0mean = mean(sparams.vShiftGround(tIndex,:));
+fidelity(1) = 1;
+fidelityMean(1) = 1;
+for ii = 1:length(times)-1
+    Uideal = expm(-1i*dt*pi*(dz1*v1 + dz2*v1));
+    Ustark = expm(-1i*dt*pi*(dz1*v1 + dz2*sparams.vShiftGround(tIndex,ii)));
+    UidealMean = expm(-1i*dt*pi*(dz1*v0mean + dz2*v0mean));
+    UstarkMean = expm(-1i*dt*pi*(dz1*v0mean + dz2*sparams.vShiftGround(tIndex,ii)));
+
+    rhoIdeal = Uideal*rhoIdeal;
+    rhoStark = Ustark*rhoStark;
+    
+    rhoIdealMean = UidealMean*rhoIdealMean;
+    rhoStarkMean = UstarkMean*rhoStarkMean;
+    
+    fidelity(ii+1) = abs(rhoIdeal'*rhoStark)^2;
+    fidelityMean(ii+1) = abs(rhoIdealMean'*rhoStarkMean)^2;
+end
+
+figure;
 hold on;
+plot(times*1E9,1-fidelity,'Linewidth',2.5);
+plot(times*1E9,1-fidelityMean,'Linewidth',2.5,'Color','red');
+% set(gca, 'YTick', [10^-15, 10^-13, 10^-11, 10^-9, 10^-7]);
+% yticks(logspace(-15,-9,7));
+set(gca, 'YScale', 'log');
+grid minor;
+grid;
+set(gca,'Fontsize',14);
+xlabel('Time [ns]','Interpreter','Latex','Fontsize',22);
+ylabel('$1 - |\langle S|\psi(t)\rangle|^2$','Interpreter','Latex','Fontsize',22);
+% set(gca,'Fontsize',14);
+% ax = gca;
+% set(gca,'YTickLabel',sprintf('%.2e\n',fidelity))
+%%
+figure;
+hold on;
+set(gca,'Fontsize',14);
 for ii = 1:sparams.numOfGates
-    plot(sparams.voltagePulse(ii,:),'Linewidth',1.5);
-    xlabel('Percentage of total time [\%]','Interpreter','Latex','Fontsize',14);
-    ylabel('Voltage [V]','Interpreter','Latex','Fontsize',14);
+    plot(sparams.voltagePulse(ii,:),'Linewidth',2);
+    xlabel('Percentage of total shuttling time [\%]','Interpreter','Latex','Fontsize',22);
+    ylabel('Voltage [V]','Interpreter','Latex','Fontsize',22);
     xlim([1,length(sparams.voltagePulse(1,:))]);
+    ylim([min(min(sparams.voltagePulse)),max(max(sparams.voltagePulse))*1.01]);
 end
 legend(sparams.gateLabels);

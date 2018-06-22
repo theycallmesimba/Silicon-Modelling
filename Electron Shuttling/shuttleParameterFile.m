@@ -12,25 +12,26 @@ sparams.verbose = 1;
 % % Miscellaneous simulation parameters
 sparams.updateWaitbar = 5000; % How many frames to wait before updating waitbar
 sparams.updateFigure = 1000; % How many frames to wait before updating figure
-sparams.updateFidelity = 4000; % How many frames to wait before calculating fidelity
 sparams.updateInterpPot = 40000; % Interpolate the potential at 40000 points at a time
+sparams.nFidelityFrames = 3000; % How many frames to calculate fidelity
 sparams.nFigureFrames = 85; % How many frames of the simulation to save for outputted gif
-sparams.nStarkShiftFrames = 300; % How many frames of the simulation to calculate the Stark shift
+sparams.nStarkShiftFrames = 1000; % How many frames of the simulation to calculate the Stark shift
 sparams.calculateStarkShift = 1; % Set to 0 if you don't want to calcualte Stark shift, 1 if you do.
 
 % % Main simulation parameters
 % sparams.potFile = 'Shuttling3gates_121steps.xlsx'; % Files to load potentials from for simulation
 % sparams.potDir = 'simulatedPotentials/0427/'; % Directory where the pot files are
-sparams.potDir = 'C:/Users/bbuonaco/Documents/MATLAB//Simulated Potentials/Three Gate Gap Induced Quantum Dots - DSize80_GSize10/';
+sparams.potDir = 'C:/Users/bbuonaco/Documents/MATLAB/Simulated Potentials/Five Gate Gap Induced Quantum Dots - DSize40_GSize20/';
 sparams.interpPotentials = 1; % Whether or not to interpolate the potentials in time domain for simulation
 sparams.interpType = 'linear'; % What type of interpolation of the potentials to do in time domain
-sparams.numOfGates = 3;
+sparams.numOfGates = 5;
 
 sparams.saveDir = 'C:/Users/bbuonaco/Documents/MATLAB/SimulationResults/Electron Shuttling/';
 sparams.saveData = 1;
 
 sparams.dt = 5E-17; % Time between each simulation frame [sec]
-sparams.totalTime = logspace(-11,-8.25,15); % Total time of simulted pulse [sec]
-% sparams.totalTime = [1E-12,2E-12];
-% sparams.totalTime = 3E-9;
-% sparams.totalTime = 1E-11;
+% sparams.totalTime = logspace(-11,-8.15,25); % Total time of simulted pulse [sec]
+% sparams.totalTime = [1E-11,2E-11];
+%sparams.totalTime = 3E-9;
+% sparams.totalTime = 1E-10;
+sparams.totalTime = [4.5973E-10,4.0973E-9];

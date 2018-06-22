@@ -6,7 +6,7 @@ function [ xx, pots ] = loadPotentialsFromFigure( sparams )
     for ii = 1:4
         for jj = 0:50
             currPotString = ['P' num2str(ii) '_' num2str(jj) '.fig'];
-            
+             
             % Load the figure
             fig = open([sparams.potDir currPotString]);
             axes = get(fig,'Children');
