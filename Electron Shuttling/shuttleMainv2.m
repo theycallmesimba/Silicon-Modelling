@@ -57,11 +57,11 @@ if debugHere
     %delete(fig);
 end
 
-
+%%
 % Get our desired votlage pulse.
 sparams = getVoltagePulse(sparams,xx);
 
-debugHere = 0;
+debugHere = 1;
 if debugHere
     fig = figure;
     hold on;
@@ -71,7 +71,7 @@ if debugHere
 %     pause(5);
 %     delete(fig);
 end
-
+%%
 fprintf(1,'Getting initial wavefunction...\n');
 % Solve the 1D SE for the initial potential well to get what our ground
 % state should look like
