@@ -5,112 +5,52 @@ function sparams = getVoltagePulse( sparams, xx )
     % The idea behind this function is to generate a pulsing sequence for
     % all the gates we have control over in our geometry.
     % We simply define each pulsing sequence according to percentage of the
-    % total time.  For now, we use a grid of 100 points.  So we have
+    % total time.  For now, we use a grid of 101 (+1 for t0) points.  So we have
     % accuracy of our control pulses to within 1% of our total time.  This
     % is easily adjustable if we need in the future.
     
     sparams.voltagePulse = zeros(sparams.numOfGates,101);
-
-    % Let's do the first part of the sweep
+    
     g1Min = 0.6;
-    g1Max = 0.8;
     g2Min = 0.6;
     g3Min = 0.6;
-    g3Max = 0.8;
+    g4Min = 0.6;
+    g5Min = 0.6;
+    
+    g1Max = 0.8;
+    g5Max = 0.8;
+%     g2Max = findZeroDetuning(sparams,xx,[g1Max,g2Min,g3Min,g4Min,g5Min],2);
+    g2Max = 0.7929;
+%     plotPotentialAndGroundWF(sparams,[g1Max,g2Max,g3Min,g4Min,g5Min],xx);
+    g3Max = 0.7927;
+%     g3Max = findZeroDetuning(sparams,xx,[g1Min,g2Max,g3Min,g4Min,g5Min],3);
+%     plotPotentialAndGroundWF(sparams,[g1Min,g2Max,g3Max,g4Min,g5Min],xx);
+    g4Max = 0.7929;
+%     g4Max = findZeroDetuning(sparams,xx,[g1Min,g2Min,g3Min,g4Min,g5Max],4);
+%     plotPotentialAndGroundWF(sparams,[g1Min,g2Min,g3Min,g4Max,g5Max],xx);
+    
     ratio = 0.989;
-    sparams.gateLabels = {'V_{L1}','V_{L2}','V_{C}','V_{R2}','V_{R1}'};
-
-%     g1Min = 1.5;
-%     g1Max = 1.7;
-%     g2Min = 1.5; 
-%     g3Min = 1.5;
-%     g3Max = 1.7;
-%     ratio = 0.99;
+        
+    gPulse = {};
     
-    % Now, we wish to find what value the second gate needs to be so that
-    % the tunnel coupling is maximal.  Due to cross capacitances, setting
-    % V1 = V2 does not actually mean the detuning is 0.  This short segment
-    % finds that value
-    scaleFactor = 1000;
-    [g2Max, ~] = fminbnd(@(x) findMinDeltaE(x),0.7*scaleFactor,0.81*scaleFactor);
-    g2Max = g2Max/scaleFactor;
-    function deltaE = findMinDeltaE(g2)
-        g2 = g2/scaleFactor;
-        currPot = squeeze(sparams.P2DEGInterpolant({g1Max,g2,g3Min,xx}));
-            
-        peaks = sort(findpeaks(-currPot),'descend');
-        deltaE = (peaks(1) - peaks(2))/sparams.ee;         
+    gPulse{1,1} = [g1Max, g1Max, ratio*g1Max, g1Min, g1Min];
+    gPulse{1,2} = [0, 12.5, 24, 25, 100];
+    
+    gPulse{2,1} = [g2Min, ratio*g2Max, g2Max, g2Max, ratio*g2Max, g2Min, g2Min];
+    gPulse{2,2} = [0, 1, 12.5, 37.5, 49, 50, 100];
+    
+    gPulse{3,1} = [g3Min, g3Min, ratio*g3Max, g3Max, g3Max, ratio*g3Max, g3Min, g3Min];
+    gPulse{3,2} = [0, 25, 26, 37.5, 62.5, 74, 75, 100];
+    
+    gPulse{4,1} = [g4Min, g4Min, ratio*g4Max, g4Max, g4Max, ratio*g4Max, g4Min];
+    gPulse{4,2} = [0, 50, 51, 62.5, 87.5, 99, 100];
+    
+    gPulse{5,1} = [g5Min, g5Min, ratio*g5Max, g5Max, g5Max];
+    gPulse{5,2} = [0, 75, 76, 87.5, 100];
+    
+    for ii = 1:sparams.numOfGates
+        sparams.voltagePulse(ii,:) = interp1(gPulse{ii,2},gPulse{ii,1},0:100);
     end
-    
-    ind = 1:3;
-    gate1p = ones(1,length(ind))*g1Max;
-    gate2p = linspace(g2Min,ratio*g2Max,length(ind));
-    gate3p = ones(1,length(ind))*g3Min;
-    
-    ind = 3:26;
-    temp1 = ones(1,length(ind))*g1Max;
-    temp2 = linspace(ratio*g2Max,g2Max,length(ind));
-    temp3 = ones(1,length(ind))*g3Min;
-    gate1p = [gate1p, temp1(2:end)];
-    gate2p = [gate2p, temp2(2:end)];
-    gate3p = [gate3p, temp3(2:end)];
-    
-    ind = 26:49;
-    temp1 = linspace(g1Max,ratio*g1Max,length(ind));
-    temp2 = ones(1,length(ind))*g2Max;
-    temp3 = ones(1,length(ind))*g3Min;
-    gate1p = [gate1p, temp1(2:end)];
-    gate2p = [gate2p, temp2(2:end)];
-    gate3p = [gate3p, temp3(2:end)];
-    
-    ind = 49:51;
-    temp1 = linspace(ratio*g1Max,g1Min,length(ind));
-    temp2 = ones(1,length(ind))*g2Max;
-    temp3 = ones(1,length(ind))*g3Min;
-    gate1p = [gate1p, temp1(2:end)];
-    gate2p = [gate2p, temp2(2:end)];
-    gate3p = [gate3p, temp3(2:end)];
-    
-    ind = 51:53;
-    temp1 = ones(1,length(ind))*g1Min;
-    temp2 = ones(1,length(ind))*g2Max;
-    temp3 = linspace(g3Min,ratio*g3Max,length(ind));
-    gate1p = [gate1p, temp1(2:end)];
-    gate2p = [gate2p, temp2(2:end)];
-    gate3p = [gate3p, temp3(2:end)];
-    
-    ind = 53:76;
-    temp1 = ones(1,length(ind))*g1Min;
-    temp2 = ones(1,length(ind))*g2Max;
-    temp3 = linspace(ratio*g3Max,g3Max,length(ind));
-    gate1p = [gate1p, temp1(2:end)];
-    gate2p = [gate2p, temp2(2:end)];
-    gate3p = [gate3p, temp3(2:end)];
-    
-    ind = 76:98;
-    temp1 = ones(1,length(ind))*g1Min;
-    temp2 = linspace(g2Max,ratio*g2Max,length(ind));
-    temp3 = ones(1,length(ind))*g3Max;
-    gate1p = [gate1p, temp1(2:end)];
-    gate2p = [gate2p, temp2(2:end)];
-    gate3p = [gate3p, temp3(2:end)];
-    
-    ind = 98:100;
-    temp1 = ones(1,length(ind))*g1Min;
-    temp2 = linspace(ratio*g2Max,g2Min,length(ind));
-    temp3 = ones(1,length(ind))*g3Max;
-    gate1p = [gate1p, temp1(2:end)];
-    gate2p = [gate2p, temp2(2:end)];
-    gate3p = [gate3p, temp3(2:end)];
-    
-    gate1p = [gate1p, g1Min];
-    gate2p = [gate2p, g2Min];
-    gate3p = [gate3p, g3Max];
-    
-    sparams.voltagePulse(1,:) = gate1p;
-    sparams.voltagePulse(2,:) = gate2p;
-    sparams.voltagePulse(3,:) = gate3p;
-    
 end
 
 

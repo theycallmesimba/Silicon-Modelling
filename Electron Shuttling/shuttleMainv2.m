@@ -6,7 +6,7 @@ shuttleParameterFile;
 
 fprintf(1,'Loading potentials...\n');
 [sparams,xx,zz] = loadPotentials(sparams);
-%%
+
 sparams.nxGrid = length(xx);
 sparams.nzGrid = length(zz);
 sparams.dx = xx(2) - xx(1);
@@ -47,16 +47,17 @@ if debugHere && sparams.verbose
     pause(5);
     delete(fig);
 end
-%%
+
 % Plot a random potential and the ground state
-debugHere = 1;
+debugHere = 0;
 if debugHere
     % Plot a random potential and the ground state
-    fig = plotPotentialAndGroundWF(sparams,[0.6,0.6,0.8,0.8,0.6],xx);
+    fig = plotPotentialAndGroundWF(sparams,[0.8,0.6,0.6,0.6,0.8],xx);
     %pause(5);
     %delete(fig);
 end
-%%
+
+
 % Get our desired votlage pulse.
 sparams = getVoltagePulse(sparams,xx);
 
@@ -70,12 +71,11 @@ if debugHere
 %     pause(5);
 %     delete(fig);
 end
-%%
+
 fprintf(1,'Getting initial wavefunction...\n');
 % Solve the 1D SE for the initial potential well to get what our ground
 % state should look like
-vvInterp = squeeze(sparams.P2DEGInterpolant([num2cell(sparams.voltagePulse(:,1)'),...
-    mat2cell(xx,1,length(xx))]));
+vvInterp = squeeze(sparams.P2DEGInterpolant([num2cell(sparams.voltagePulse(:,1)'),xx]));
  
 [sparams.rho0, ~] = solve1DSingleElectronSE(sparams,1,xx,vvInterp); 
 
@@ -84,8 +84,8 @@ vvInterp = squeeze(sparams.P2DEGInterpolant([num2cell(sparams.voltagePulse(:,1)'
 debugHere = 0;
 if debugHere
     fig = plotPotentialAndGroundWF(sparams,sparams.voltagePulse(:,1)',xx);
-    %pause(5);
-    %delete(fig);
+    pause(5);
+    delete(fig);
 end
 
 % Using ref https://arxiv.org/pdf/1306.3247.pdf we now find the time
@@ -125,9 +125,10 @@ for jj = 1:length(sparams.totalTime)
     tPots = linspace(0,sparams.totalTime(jj),101);
     
     % Now we need to make the individual pulses interpolants
-    sparams.vPulseG1Interpolant = griddedInterpolant({tPots},sparams.voltagePulse(1,:));
-    sparams.vPulseG2Interpolant = griddedInterpolant({tPots},sparams.voltagePulse(2,:));
-    sparams.vPulseG3Interpolant = griddedInterpolant({tPots},sparams.voltagePulse(3,:));
+    sparams.vPulseGInterpolants = {};
+    for vv = 1:sparams.numOfGates
+        sparams.vPulseGInterpolants{vv} = griddedInterpolant({tPots},sparams.voltagePulse(vv,:));
+    end
     
     % Get number of time steps
     tTime = 0:sparams.dt:sparams.totalTime(jj);
@@ -192,13 +193,20 @@ for jj = 1:length(sparams.totalTime)
                 end
                 
                 % Get the voltage gate values for the current time index
-                g1 = sparams.vPulseG1Interpolant({tTime(startInterpInd:endInterpInd)});
-                g2 = sparams.vPulseG2Interpolant({tTime(startInterpInd:endInterpInd)});
-                g3 = sparams.vPulseG3Interpolant({tTime(startInterpInd:endInterpInd)}); 
+                gPulse = zeros(sparams.numOfGates,length(startInterpInd:endInterpInd));
+                for vv = 1:sparams.numOfGates
+                    gPulse(vv,:) = sparams.vPulseGInterpolants{vv}({tTime(startInterpInd:endInterpInd)});
+                end
             end
         end
         
-        currPotential = squeeze(sparams.P2DEGInterpolant({g1(kk),g2(kk),g3(kk),xx}))';
+        curr2DEGInterpArg = {};
+        for vv = 1:sparams.numOfGates
+            curr2DEGInterpArg = [curr2DEGInterpArg, gPulse(vv,kk)];
+        end
+        curr2DEGInterpArg = [curr2DEGInterpArg, xx];
+        
+        currPotential = squeeze(sparams.P2DEGInterpolant(curr2DEGInterpArg))';
         V = exp(-1i*sparams.dt*currPotential/sparams.hbar);
 
         % Convert from momentum to position space
@@ -226,7 +234,12 @@ for jj = 1:length(sparams.totalTime)
             currPsiTemp = fftshift(ifft(fftshift(currPsip)));
             
             % Get the current interpolated 2D potential
-            curr2DPot = squeeze(sparams.P2DInterpolant({g1(kk),g2(kk),g3(kk),zz,xx}));
+            curr2DInterpArg = {};
+            for vv = 1:sparams.numOfGates
+                curr2DInterpArg = [curr2DInterpArg, gPulse(vv,kk)];
+            end
+            curr2DInterpArg = [curr2DInterpArg, zz, xx];
+            curr2DPot = squeeze(sparams.P2DInterpolant(curr2DInterpArg));
             sparams.stark2DPots(yy,:) = curr2DPot(sparams.twoDEGindZ,:);
                         
             % Find the electric field

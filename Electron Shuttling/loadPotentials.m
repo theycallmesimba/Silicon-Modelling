@@ -49,6 +49,9 @@
         if nn == 1
             xdata = data(1,2:cols);
             ydata = data(2:rows,1);
+            
+            cutXData = find(xdata >= -200 & xdata <= 200);
+            xdata = xdata(cutXData);
 
             % The data may not be uniform in sampling, so we need to fix that for
             % the fourier transforms in the main code for speed up.
@@ -66,7 +69,7 @@
         end
         % Now interpolate potential and save it along with current voltage
         % values
-        sparams.potentials(nn).pot2D = -sparams.ee*interp2(XX,ZZ,zdata,XXq,ZZq); % Convert to J and invert
+        sparams.potentials(nn).pot2D = -sparams.ee*interp2(XX,ZZ,zdata(:,cutXData),XXq,ZZq); % Convert to J and invert
         sparams.potentials(nn).gateValues = voltages(currFileVec);
 %         sparams.potentials(nn).gateValues = [voltages(currFileVec(3)),voltages(currFileVec(2)),...
 %             voltages(currFileVec(1)),voltages(currFileVec(5)),voltages(currFileVec(4))];
