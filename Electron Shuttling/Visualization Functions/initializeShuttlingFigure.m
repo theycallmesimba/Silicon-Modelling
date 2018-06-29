@@ -1,14 +1,14 @@
-function updateFigure( sparams, fig, wf1, wf2, xx, vv, timeInd )
-%UPDATEFIGURE Summary of this function goes here
+function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, vv, timeInd )
+%INITIALIZESHUTTLINGFIGURE Summary of this function goes here
 %   Detailed explanation goes here
-
+    fig = figure('pos',[0 0 1300 550]);
+    movegui(fig,'northeast');
+    
     xx = xx/1E-9;
     axisFontSize = 16;
     labelFontSize = 30;
     titleFontSize = 35;
     
-    figure(fig);
-    clf;
     hold on;
     set(gca,'Fontsize',axisFontSize);
     title(['Shuttling Simulation ' num2str(sparams.totalTime(timeInd)) '[s]'],'interpreter','latex','fontsize',titleFontSize);

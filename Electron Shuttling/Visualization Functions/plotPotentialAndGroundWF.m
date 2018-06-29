@@ -3,8 +3,9 @@ function fig = plotPotentialAndGroundWF( sparams, gateVoltages, xx )
 %   Detailed explanation goes here
 
     fig = figure;
-    tempPot = squeeze(sparams.P2DEGInterpolant([num2cell(gateVoltages),...
-        mat2cell(xx,1,length(xx))]));
+    tempPot = sparams.P2DEGInterpolant([num2cell(gateVoltages),mat2cell(xx,1,length(xx))]);
+    tempPot = squeezeFast(sparams.numOfGates,tempPot);
+    
     [tempWF, ~] = solve1DSingleElectronSE(sparams,1,xx,tempPot); 
     xlabel('Position [nm]','Interpreter','Latex','Fontsize',14);
     xlim([min(xx),max(xx)]);

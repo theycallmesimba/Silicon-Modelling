@@ -2,7 +2,7 @@ function sparams = makePotentialsInterpolants( sparams, xx, zz )
 %MAKEPOTENTIALSINTERPOLANTS Summary of this function goes here
 %   Detailed explanation goes here
 
-    % Get the min and max value for each gate
+    % Get the gate
     allGateValues = reshape([sparams.potentials.gateValues],sparams.numOfGates,[])';
 
     argGridVecVolts = {};

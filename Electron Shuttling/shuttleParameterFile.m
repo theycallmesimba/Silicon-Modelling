@@ -10,17 +10,20 @@ sparams.n2 = 2.2*1E-9*1E-9; % [m^2/V^2] Stark shift formula quadratic coefficien
 sparams.verbose = 1;
 
 % % Miscellaneous simulation parameters
-sparams.updateWaitbar = 5000; % How many frames to wait before updating waitbar
-sparams.updateFigure = 1500; % How many frames to wait before updating figure
+sparams.updateWaitbar = 10000; % How many frames to wait before updating waitbar
+sparams.updateFigure = 7000; % How many frames to wait before updating figure
 sparams.updateInterpPot = 40000; % Interpolate the potential at 40000 points at a time
-sparams.nFidelityFrames = 5000; % How many frames to calculate fidelity
+sparams.nFidelityFrames = 1000; % How many frames to calculate fidelity
 sparams.nFigureFrames = 160; % How many frames of the simulation to save for outputted gif
-sparams.nStarkShiftFrames = 1000; % How many frames of the simulation to calculate the Stark shift
+sparams.nStarkShiftFrames = 500; % How many frames of the simulation to calculate the Stark shift
 sparams.calculateStarkShift = 1; % Set to 0 if you don't want to calcualte Stark shift, 1 if you do.
+
+sparams.tcTuningThreshold = 0.0011;
 
 % % Main simulation parameters
 % sparams.potFile = 'Shuttling3gates_121steps.xlsx'; % Files to load potentials from for simulation
 % sparams.potDir = 'simulatedPotentials/0427/'; % Directory where the pot files are
+% sparams.potDir = 'C:/Users/bbuonaco/Documents/MATLAB/Simulated Potentials/Five Gate Gap Induced Quantum Dots - DSize40_GSize20/';
 sparams.potDir = 'C:/Users/bbuonaco/Documents/MATLAB/Simulated Potentials/Five Gate Gap Induced Quantum Dots - DSize40_GSize20/';
 sparams.interpPotentials = 1; % Whether or not to interpolate the potentials in time domain for simulation
 sparams.interpType = 'linear'; % What type of interpolation of the potentials to do in time domain
@@ -34,5 +37,5 @@ sparams.dt = 5E-17; % Time between each simulation frame [sec]
 % sparams.totalTime = logspace(-11,-8.15,25); % Total time of simulted pulse [sec]
 % sparams.totalTime = [1E-11,2E-11];
 %sparams.totalTime = 3E-9;
-sparams.totalTime = 9E-9;
+sparams.totalTime = 8E-9;
 % sparams.totalTime = [4.5973E-10,4.0973E-9];

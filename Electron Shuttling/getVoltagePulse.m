@@ -1,4 +1,4 @@
-function sparams = getVoltagePulse( sparams, xx )
+function  sparams = getVoltagePulse( sparams, xx )
 %GETVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,7 +9,7 @@ function sparams = getVoltagePulse( sparams, xx )
     % accuracy of our control pulses to within 1% of our total time.  This
     % is easily adjustable if we need in the future.
     
-    sparams.voltagePulse = zeros(sparams.numOfGates,101);
+    sparams.voltagePulse = zeros(sparams.numOfGates,200);
     
     g1Min = 0.6;
     g2Min = 0.6;
@@ -18,13 +18,13 @@ function sparams = getVoltagePulse( sparams, xx )
     g5Min = 0.6;
     
     g1Max = 0.8;
-    vMinBnd = 0.786;
-    vMaxBnd = 0.796;
+    vMinBnd = 0.784;
+    vMaxBnd = 0.795;
     
     [g2TurnTcOn, g2Max] = findTunnelCouplingTurnOn(sparams, xx,...
         [g1Max,g2Min,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 2);
     [g1TurnTcOff, ~] = findTunnelCouplingTurnOn(sparams, xx,...
-        [g1Min,g2Max,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 1);
+        [g1Min,g2Max,g3Min,g4Min,g5Min], vMinBnd, g1Max, 1);
     
     [g3TurnTcOn, g3Max] = findTunnelCouplingTurnOn(sparams, xx,...
         [g1Min,g2Max,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 3);
@@ -37,10 +37,9 @@ function sparams = getVoltagePulse( sparams, xx )
         [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, vMaxBnd, 3);
     
     [g5TurnTcOn, g5Max] = findTunnelCouplingTurnOn(sparams, xx,...
-        [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, vMaxBnd, 5);
+        [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, g1Max, 5);
     [g4TurnTcOff, ~] = findTunnelCouplingTurnOn(sparams, xx,...
-        [g1Min,g2Min,g3Min,g4Min,g5Max], vMinBnd, vMaxBnd, 4);
-    g5Max = 0.8;
+        [g1Min,g2Min,g3Min,g4Min,g5Max], vMinBnd, g5Max, 4);
     
 %     g2Max = findZeroDetuning(sparams,xx,[g1Max,g2Min,g3Min,g4Min,g5Min],2);
 %     g2Max = 0.7929;
@@ -49,7 +48,7 @@ function sparams = getVoltagePulse( sparams, xx )
 %     g4Max = 0.7929;
 %     g4Max = findZeroDetuning(sparams,xx,[g1Min,g2Min,g3Min,g4Min,g5Max],4);
 %     ratio = 0.989;
-        
+%         
     gPulse = {};
     
     gPulse{1,1} = [g1Max, g1Max, g1TurnTcOff, g1Min, g1Min];
@@ -99,13 +98,13 @@ function [vGTargTurnOn, vGTargMax] = findTunnelCouplingTurnOn(sparams, xx, vVec,
             break;
         end
         vVecCell{gateIndSweep} = currV;
-        currPotential = squeeze(sparams.P2DEGInterpolant(vVecCell));
+        currPotential = squeezeFast(sparams.P2DEGInterpolant(vVecCell));
         [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
         currRho0NormSquared = abs(currRho0).^2/norm(abs(currRho0).^2);
         
         pks = findpeaks(currRho0NormSquared);
-        pks = pks(pks >= 0.0001);
-                
+        pks = pks(pks >= sparams.tcTuningThreshold);
+
         if length(pks) == 2 
             if ~turnOnFound
                 turnOnFound = 1;
@@ -114,7 +113,7 @@ function [vGTargTurnOn, vGTargMax] = findTunnelCouplingTurnOn(sparams, xx, vVec,
                 findpeaks(currRho0NormSquared);
 
                 subplot(1,2,1);
-                title(sprintf('Tc Turn On - Gate %d',gateIndSweep));
+                title(sprintf('Tc Turn - Gate %d',gateIndSweep));
                 yyaxis left
                 plot(xx,currPotential);
                 yyaxis right
