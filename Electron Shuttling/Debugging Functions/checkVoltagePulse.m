@@ -1,4 +1,4 @@
-function checkVoltagePulse( sparams )
+function fig = checkVoltagePulse( sparams )
 %CHECKVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,7 +7,5 @@ function checkVoltagePulse( sparams )
     for ii = 1:sparams.numOfGates
         plot(sparams.voltagePulse(ii,:),'Linewidth',1.5);
     end
-    pause(5);
-    delete(fig);
 end
 

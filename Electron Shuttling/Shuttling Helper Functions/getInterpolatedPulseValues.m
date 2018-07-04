@@ -6,7 +6,8 @@ function gPulse = getInterpolatedPulseValues( sparams, tVec, interpolants )
         % Get the voltage gate values for the current time index
         gPulse = zeros(sparams.numOfGates,length(tVec));
         for vv = 1:sparams.numOfGates
-            gPulse(vv,:) = interpolants{vv}({tVec});
+            currInterpolant = interpolants{vv};
+            gPulse(vv,:) = currInterpolant({tVec});
         end
     end
 end

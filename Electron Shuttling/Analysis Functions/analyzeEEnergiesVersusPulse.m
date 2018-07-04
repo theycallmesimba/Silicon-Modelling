@@ -10,7 +10,6 @@ function analyzeEEnergiesVersusPulse( sparams, xx )
     end
     
     qPots = linspace(0,1,301);
-    
     pulse = getInterpolatedPulseValues(sparams,qPots,vPulseGInterpolants);
     
     nSols = 4;
@@ -22,25 +21,6 @@ function analyzeEEnergiesVersusPulse( sparams, xx )
         ens(ii,:) = diag(energies)'/sparams.ee;
     end
     
-    figure;
-    axisFontSize = 20;
-    tickFontSize = 15;
-    titleFontSize = 25;
-    set(gca,'Fontsize',tickFontSize);
-    hold on;
-    title('E-Energies vs. Pulse','Interpreter','Latex','Fontsize',titleFontSize);
-    xlabel('\% of shuttle time','Interpreter','Latex','Fontsize',axisFontSize);
-    
-    yyaxis left
-    plot(qPots,ens,'Linewidth',2.0,'Linestyle','-');
-    ylabel('Energy [eV]','Interpreter','Latex','Fontsize',axisFontSize);
-    
-    yyaxis right
-    for ii = 1:sparams.numOfGates
-        plt = plot(xPots,sparams.voltagePulse(ii,:),'Linewidth',2.0,...
-            'Linestyle','-','Marker','none');
-        plt.Color(4) = 0.7;
-    end
-    ylabel('Voltage [V]','Interpreter','Latex','Fontsize',axisFontSize);
+    plotFunctionOverVoltagePulse(sparams,xPots,qPots,ens);
 end
 

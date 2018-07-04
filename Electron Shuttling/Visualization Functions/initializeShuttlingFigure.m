@@ -1,6 +1,10 @@
-function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, vv, timeInd )
+function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, timeInd )
 %INITIALIZESHUTTLINGFIGURE Summary of this function goes here
 %   Detailed explanation goes here
+
+    vvInitial = sparams.P2DEGInterpolant([num2cell(sparams.voltagePulse(:,1)'),xx]);
+    vvInitial = squeezeFast(sparams.numOfGates,vvInitial);
+    
     fig = figure('pos',[0 0 1300 550]);
     movegui(fig,'northeast');
     
@@ -16,7 +20,7 @@ function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, vv, timeInd )
     xlim([min(xx),max(xx)]);
     
     yyaxis left
-    plot(xx,vv/sparams.ee,'Linewidth',1.5);
+    plot(xx,vvInitial/sparams.ee,'Linewidth',1.5);
     ylabel('Potential [V]','Interpreter','Latex','Fontsize',labelFontSize);
     
     yyaxis right

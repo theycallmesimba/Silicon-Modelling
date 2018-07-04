@@ -9,7 +9,9 @@ function  sparams = getVoltagePulse( sparams, xx )
     % accuracy of our control pulses to within 1% of our total time.  This
     % is easily adjustable if we need in the future.
     
-    sparams.voltagePulse = zeros(sparams.numOfGates,200);
+    nPts = 300;
+    
+    sparams.voltagePulse = zeros(sparams.numOfGates,nPts);
     
     g1Min = 0.6;
     g2Min = 0.6;
@@ -18,8 +20,8 @@ function  sparams = getVoltagePulse( sparams, xx )
     g5Min = 0.6;
     
     g1Max = 0.8;
-    vMinBnd = 0.784;
-    vMaxBnd = 0.795;
+    vMinBnd = 0.796;
+    vMaxBnd = 0.800;
     
     [g2TurnTcOn, g2Max] = findTunnelCouplingTurnOn(sparams, xx,...
         [g1Max,g2Min,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 2);
@@ -67,7 +69,7 @@ function  sparams = getVoltagePulse( sparams, xx )
     gPulse{5,2} = [0, 75, 76, 87.5, 100];
     
     for ii = 1:sparams.numOfGates
-        sparams.voltagePulse(ii,:) = interp1(gPulse{ii,2},gPulse{ii,1},0:100);
+        sparams.voltagePulse(ii,:) = interp1(gPulse{ii,2},gPulse{ii,1},linspace(0,100,nPts));
     end
 end
 
@@ -98,7 +100,7 @@ function [vGTargTurnOn, vGTargMax] = findTunnelCouplingTurnOn(sparams, xx, vVec,
             break;
         end
         vVecCell{gateIndSweep} = currV;
-        currPotential = squeezeFast(sparams.P2DEGInterpolant(vVecCell));
+        currPotential = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCell));
         [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
         currRho0NormSquared = abs(currRho0).^2/norm(abs(currRho0).^2);
         

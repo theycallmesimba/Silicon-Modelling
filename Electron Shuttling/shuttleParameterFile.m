@@ -18,13 +18,13 @@ sparams.nFigureFrames = 160; % How many frames of the simulation to save for out
 sparams.nStarkShiftFrames = 500; % How many frames of the simulation to calculate the Stark shift
 sparams.calculateStarkShift = 1; % Set to 0 if you don't want to calcualte Stark shift, 1 if you do.
 
-sparams.tcTuningThreshold = 0.0011;
+sparams.tcTuningThreshold = 0.0009;
 
 % % Main simulation parameters
 % sparams.potFile = 'Shuttling3gates_121steps.xlsx'; % Files to load potentials from for simulation
 % sparams.potDir = 'simulatedPotentials/0427/'; % Directory where the pot files are
+sparams.potDir = 'C:/Users/bbuonaco/Documents/MATLAB/Simulated Potentials/5-gate sim new/';
 % sparams.potDir = 'C:/Users/bbuonaco/Documents/MATLAB/Simulated Potentials/Five Gate Gap Induced Quantum Dots - DSize40_GSize20/';
-sparams.potDir = 'C:/Users/bbuonaco/Documents/MATLAB/Simulated Potentials/Five Gate Gap Induced Quantum Dots - DSize40_GSize20/';
 sparams.interpPotentials = 1; % Whether or not to interpolate the potentials in time domain for simulation
 sparams.interpType = 'linear'; % What type of interpolation of the potentials to do in time domain
 sparams.numOfGates = 5;

@@ -28,25 +28,27 @@ debugHere = 0;
 if debugHere
     checkPotentialLoad(sparams,xx,zz);
 end
-
+%%
 % Plot a random potential and the ground state
-debugHere = 0;
+debugHere = 1;
 if debugHere
     % Plot a random potential and the ground state
-    plotPotentialAndGroundWF(sparams,[0.8,0.6,0.6,0.6,0.8],xx);
+    plotPotentialAndGroundWF(sparams,[0.8,0.7998,0.6,0.6,0.8],xx);
 end
 
-
+%%
 % Get our desired votlage pulse.
 sparams = getVoltagePulse(sparams,xx);
 
 debugHere = 1;
 if debugHere
-    checkVoltagePulse(sparams);
+    fig = checkVoltagePulse(sparams);
+    pause(5);
+    delete(fig);
 end
 %%
-analyzeEEnergiesVersusPulse(sparams, xx);
-%%
+% analyzeEEnergiesVersusPulse(sparams, xx);
+
 profile on;
 
 fprintf(1,'Getting initial wavefunction...\n');
@@ -114,7 +116,7 @@ for jj = 1:length(sparams.totalTime)
 
     currPsi = sparams.rho0';
     
-    shtlEvolutionFig = initializeShuttlingFigure(sparams, currPsi, currPsi, xx, vvInitial, jj);
+    shtlEvolutionFig = initializeShuttlingFigure(sparams, currPsi, currPsi, xx, jj);
     
     nn = 1; % Used to index fidelity array
     ll = 0; % Used to know where in time domain to interpolate our potentials
@@ -148,6 +150,11 @@ for jj = 1:length(sparams.totalTime)
             if ii == 1
                 startInterpInd = 1;
             end
+            
+            % Increment counter for what batch of time indices in the pulse
+            % to interpolate
+            ll = ll + 1;
+            
             endInterpInd = ll*sparams.updateInterpPot - 1;
             if endInterpInd > length(tTime)
                 endInterpInd = length(tTime);
@@ -155,16 +162,12 @@ for jj = 1:length(sparams.totalTime)
             
             gPulse = getInterpolatedPulseValues(sparams,...
                 tTime(startInterpInd:endInterpInd),sparams.vPulseGInterpolants);
-            
-            % Increment counter for what batch of time indices in the pulse
-            % to interpolate
-            ll = ll + 1;
         end
-
+        
         currPotential = sparams.P2DEGInterpolant(getInterpolantArgument(gPulse(:,kk),xx));
         currPotential = squeezeFast(sparams.numOfGates,currPotential)';
         V = exp(-1i*sparams.dt*currPotential/sparams.hbar);
-
+        
         % Convert from momentum to position space
         currPsix = ifft(fftshift(currPsip));
         % Apply the PE operator for dt
@@ -180,7 +183,7 @@ for jj = 1:length(sparams.totalTime)
             % Convert from momentum to position space
             currPsi = ifft(fftshift(currPsip));
         end
-
+        
         % Calculate Stark shift
         if any(sparams.starkShiftIndices(jj,:) == ii) && sparams.calculateStarkShift
             yy = yy + 1;
@@ -198,7 +201,7 @@ for jj = 1:length(sparams.totalTime)
             updateShuttlingFigure(sparams,shtlEvolutionFig,ifft(fftshift(currPsip)),...
                 currRho0,currPotential);
         end
-
+        
         % Update figure and save to gif
         if any(sparams.saveFigureIndices(jj,:) == ii)
             [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
@@ -206,7 +209,7 @@ for jj = 1:length(sparams.totalTime)
             updateShuttlingFigure(sparams,shtlEvolutionFig,ifft(fftshift(currPsip)),...
                 currRho0,currPotential);
                         
-            saveGIFofEvolution(sparams, shtlEvolutionFig);
+            saveGIFofEvolution(sparams, shtlEvolutionFig, tTime(ii), sparams.totalTime(jj));
         end
         
         % Calculate fidelity WRT current ground state
@@ -216,6 +219,7 @@ for jj = 1:length(sparams.totalTime)
             sparams.fidelity(jj,nn) = abs(getInnerProduct(xx,currRho0.',ifft(fftshift(currPsip))))^2;
             nn = nn + 1;
         end
+        
     end
             
     % Close simulation figure
