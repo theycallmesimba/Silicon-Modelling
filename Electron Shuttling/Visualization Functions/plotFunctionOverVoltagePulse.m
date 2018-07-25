@@ -1,4 +1,4 @@
-function plotFunctionOverVoltagePulse( sparams, xPulse, xxDataToPlot, yyDataToPlot )
+function plotFunctionOverVoltagePulse( sparams, xDataPulse, xxDataToPlot, yyDataToPlot )
 %PLOTFUNCOVERVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -17,7 +17,7 @@ function plotFunctionOverVoltagePulse( sparams, xPulse, xxDataToPlot, yyDataToPl
     
     yyaxis right
     for ii = 1:sparams.numOfGates
-        plt = plot(xPulse,sparams.voltagePulse(ii,:),'Linewidth',2.0,...
+        plt = plot(xDataPulse,sparams.voltagePulse(ii,:),'Linewidth',2.0,...
             'Linestyle','-','Marker','none');
         plt.Color(4) = 0.7;
     end

@@ -1,72 +1,43 @@
-function calculateAdiabaticParameter( sparams, xx )
-%FINDADIABATICTHRESHOLD Summary of this function goes here
-%   Detailed explanation goes here
-    profile on
+function adiabaticParam = calculateAdiabaticParameter( sparams, xx,... 
+    pulseInterpolants, cTime, nn, mmVec )
     
-    time = 8E-9;
-    h = 1E-14;
-    qTime = linspace(0,time,501);
-    thresh = 0;
-    numOfMs = 5;
-    nn = 1;
-    
-    % Now we need to make the individual gate interpolants for the pulse
-    tPots = linspace(0,time,length(sparams.voltagePulse(1,:)));
-    vPulseGInterpolants = {};
-    for vv = 1:sparams.numOfGates
-        vPulseGInterpolants{vv} = griddedInterpolant({tPots},sparams.voltagePulse(vv,:));
-    end
-    
-    adiabaticThresholdValue = zeros(1,length(qTime));
-    for ii = 1:length(qTime)
-        currPulse = getInterpolatedPulseValues(sparams,qTime(ii),vPulseGInterpolants);
-        currPot = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse,xx));
-        currPot = squeezeFast(sparams.numOfGates,currPot)';
+    h = sparams.hdt;
 
-        [mWFs,mEns] = solve1DSingleElectronSE(sparams, numOfMs, xx, currPot);
+    % Get current pulse point plus the shifted ones as well (+h,+2h,-h,-2h)
+    currPulse = getInterpolatedPulseValues(sparams,...
+        [cTime-(2*h),cTime-h,cTime,cTime+h,cTime+(2*h)],pulseInterpolants);
+    currPot = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,3),xx));
+    currPot = squeezeFast(sparams.numOfGates,currPot)';
 
-        % Estimate the derivative of the nth WF using a five point stencil
-        currPulse = getInterpolatedPulseValues(sparams,qTime(ii)+(2*h),vPulseGInterpolants);
-        currPotH = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse,xx));
-        currPotH = squeezeFast(sparams.numOfGates,currPotH)';
-        [fxp2h,~] = solve1DSingleElectronSE(sparams, 1, xx, currPotH);
+    [mWFs,mEns] = solve1DSingleElectronSE(sparams, max(mmVec), xx, currPot);
 
-        currPulse = getInterpolatedPulseValues(sparams,qTime(ii)+(h),vPulseGInterpolants);
-        currPotH = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse,xx));
-        currPotH = squeezeFast(sparams.numOfGates,currPotH)';
-        [fxph,~] = solve1DSingleElectronSE(sparams, 1, xx, currPotH);
+    % Estimate the derivative of the nth WF using a five point stencil
+    currPotp2h = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,5),xx));
+    currPotp2h = squeezeFast(sparams.numOfGates,currPotp2h)';
+    [fxp2h,~] = solve1DSingleElectronSE(sparams, 1, xx, currPotp2h);
 
-        currPulse = getInterpolatedPulseValues(sparams,qTime(ii)-(h),vPulseGInterpolants);
-        currPotH = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse,xx));
-        currPotH = squeezeFast(sparams.numOfGates,currPotH)';
-        [fxmh,~] = solve1DSingleElectronSE(sparams, 1, xx, currPotH);
+    currPotph = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,4),xx));
+    currPotph = squeezeFast(sparams.numOfGates,currPotph)';
+    [fxph,~] = solve1DSingleElectronSE(sparams, 1, xx, currPotph);
 
-        currPulse = getInterpolatedPulseValues(sparams,qTime(ii)-(2*h),vPulseGInterpolants);
-        currPotH = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse,xx));
-        currPotH = squeezeFast(sparams.numOfGates,currPotH)';
-        [fxm2h,~] = solve1DSingleElectronSE(sparams, 1, xx, currPotH);
+    currPotmh = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,2),xx));
+    currPotmh = squeezeFast(sparams.numOfGates,currPotmh)';
+    [fxmh,~] = solve1DSingleElectronSE(sparams, 1, xx, currPotmh);
 
-        nWFDeriv = (-fxp2h + 8*fxph - 8*fxmh + fxm2h)/(12*h);
+    currPot2mh = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,1),xx));
+    currPot2mh = squeezeFast(sparams.numOfGates,currPot2mh)';
+    [fxm2h,~] = solve1DSingleElectronSE(sparams, 1, xx, currPot2mh);
 
-        thresh = 0;
-        for jj = 1:numOfMs
-            if jj == nn
-                continue
-            end
-            threshTemp = abs(sparams.hbar*getInnerProduct(xx,mWFs(:,jj),nWFDeriv)/(mEns(jj,jj) - mEns(nn,nn)));
-            thresh = thresh + threshTemp;
+    nWFDeriv = (-fxp2h + 8*fxph - 8*fxmh + fxm2h)/(12*h);
+
+    % Now evaluate the adiabatic parameter by summing over all excited
+    % states
+    adiabaticParam = 0;
+    for jj = mmVec
+        if jj == nn
+            continue
         end
-        adiabaticThresholdValue(ii) = thresh;
+        adiabaticParamTemp = abs(sparams.hbar*getInnerProduct(xx,mWFs(:,jj),nWFDeriv)/(mEns(jj,jj) - mEns(nn,nn)));
+        adiabaticParam = adiabaticParam + adiabaticParamTemp;
     end
-    
-    plotFunctionOverVoltagePulse(sparams,tPots,qTime,adiabaticThresholdValue);
-    
-    profile off
-    profile viewer
 end
-
-
-
-
-
-

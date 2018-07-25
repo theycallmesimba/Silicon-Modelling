@@ -6,7 +6,8 @@ function fig = plotPotentialAndGroundWF( sparams, gateVoltages, xx )
     tempPot = sparams.P2DEGInterpolant([num2cell(gateVoltages),mat2cell(xx,1,length(xx))]);
     tempPot = squeezeFast(sparams.numOfGates,tempPot);
     
-    [tempWF, ~] = solve1DSingleElectronSE(sparams,1,xx,tempPot); 
+    [tempWF, ~] = solve1DSingleElectronSE(sparams,2,xx,tempPot); 
+    
     xlabel('Position [nm]','Interpreter','Latex','Fontsize',14);
     xlim([min(xx),max(xx)]);
         

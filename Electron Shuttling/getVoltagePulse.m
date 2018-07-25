@@ -1,4 +1,4 @@
-function  sparams = getVoltagePulse( sparams, xx )
+function sparams = getVoltagePulse( sparams, xx )
 %GETVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -23,34 +23,35 @@ function  sparams = getVoltagePulse( sparams, xx )
     vMinBnd = 0.796;
     vMaxBnd = 0.800;
     
-    [g2TurnTcOn, g2Max] = findTunnelCouplingTurnOn(sparams, xx,...
+
+    g2TurnTcOn = findTunnelCouplingTurnOn(sparams, xx,...
         [g1Max,g2Min,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 2);
-    [g1TurnTcOff, ~] = findTunnelCouplingTurnOn(sparams, xx,...
+    [g2Max, ~] = findTunnelCouplingMax(sparams, xx,...
+        [g1Max,g2Min,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 2);
+    g1TurnTcOff = findTunnelCouplingTurnOn(sparams, xx,...
         [g1Min,g2Max,g3Min,g4Min,g5Min], vMinBnd, g1Max, 1);
     
-    [g3TurnTcOn, g3Max] = findTunnelCouplingTurnOn(sparams, xx,...
+    g3TurnTcOn = findTunnelCouplingTurnOn(sparams, xx,...
         [g1Min,g2Max,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 3);
-    [g2TurnTcOff, ~] = findTunnelCouplingTurnOn(sparams, xx,...
-        [g1Min,g2Min,g3Max,g4Min,g5Min], vMinBnd, vMaxBnd, 2);
+    [g3Max, ~] = findTunnelCouplingMax(sparams, xx,...
+        [g1Min,g2Max,g3Min,g4Min,g5Min], vMinBnd, vMaxBnd, 3);
+    g2TurnTcOff = findTunnelCouplingTurnOn(sparams, xx,...
+        [g1Min,g2Min,g3Max,g4Min,g5Min], vMinBnd, g1Max, 2);
     
-    [g4TurnTcOn, g4Max] = findTunnelCouplingTurnOn(sparams, xx,...
+    g4TurnTcOn = findTunnelCouplingTurnOn(sparams, xx,...
         [g1Min,g2Min,g3Max,g4Min,g5Min], vMinBnd, vMaxBnd, 4);
-    [g3TurnTcOff, ~] = findTunnelCouplingTurnOn(sparams, xx,...
-        [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, vMaxBnd, 3);
+    [g4Max, ~] = findTunnelCouplingMax(sparams, xx,...
+        [g1Min,g2Min,g3Max,g4Min,g5Min], vMinBnd, vMaxBnd, 4);
+    g3TurnTcOff = findTunnelCouplingTurnOn(sparams, xx,...
+        [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, g1Max, 3);
     
-    [g5TurnTcOn, g5Max] = findTunnelCouplingTurnOn(sparams, xx,...
-        [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, g1Max, 5);
-    [g4TurnTcOff, ~] = findTunnelCouplingTurnOn(sparams, xx,...
-        [g1Min,g2Min,g3Min,g4Min,g5Max], vMinBnd, g5Max, 4);
-    
-%     g2Max = findZeroDetuning(sparams,xx,[g1Max,g2Min,g3Min,g4Min,g5Min],2);
-%     g2Max = 0.7929;
-%     g3Max = 0.7927;
-%     g3Max = findZeroDetuning(sparams,xx,[g1Min,g2Max,g3Min,g4Min,g5Min],3);
-%     g4Max = 0.7929;
-%     g4Max = findZeroDetuning(sparams,xx,[g1Min,g2Min,g3Min,g4Min,g5Max],4);
-%     ratio = 0.989;
-%         
+    g5TurnTcOn = findTunnelCouplingTurnOn(sparams, xx,...
+        [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, vMaxBnd, 5);
+    [g5Max, ~] = findTunnelCouplingMax(sparams, xx,...
+        [g1Min,g2Min,g3Min,g4Max,g5Min], vMinBnd, vMaxBnd, 5);
+    g4TurnTcOff = findTunnelCouplingTurnOn(sparams, xx,...
+        [g1Min,g2Min,g3Min,g4Min,g5Max], vMinBnd, g1Max, 4);
+         
     gPulse = {};
     
     gPulse{1,1} = [g1Max, g1Max, g1TurnTcOff, g1Min, g1Min];
@@ -73,75 +74,75 @@ function  sparams = getVoltagePulse( sparams, xx )
     end
 end
 
-function [vGTargTurnOn, vGTargMax] = findTunnelCouplingTurnOn(sparams, xx, vVec,...
-    vMinBnd, vMaxBnd, gateIndSweep)
-    % What we want to do here is find the point in time where tunnel
-    % coupling turns on.  So we will slowly sweep through the voltage (in
-    % 0.01 mV increments until we find 2 peaks of the wavefunction (one of
-    % the peaks should be incredibly small).  Then we will continue
-    % sweeping until the peak heights are close to equal indicating maximal
-    % tunnel coupling.  The first voltage point will be where we want to
-    % sweep fast to and from there on we will sweep slowly.
-
-    % Convert vVec from a list to a cell array and add on xx
-    vVecCell = [num2cell(vVec),xx];
-    
-    turnOnFound = 0;
-    maxTcFound = 0;
-    
-    currPeakDifference = 1E10;
-    tcFigure = figure('pos',[0 0 1300 550]);
-    movegui(tcFigure,'northeast');
-    drawnow;
-    title(sprintf('Finding Tc Points for Gate = %d',gateIndSweep));
-    
-    for currV = vMinBnd:1E-5:vMaxBnd
-        if maxTcFound
-            break;
-        end
-        vVecCell{gateIndSweep} = currV;
-        currPotential = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCell));
-        [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
-        currRho0NormSquared = abs(currRho0).^2/norm(abs(currRho0).^2);
-        
-        pks = findpeaks(currRho0NormSquared);
-        pks = pks(pks >= sparams.tcTuningThreshold);
-
-        if length(pks) == 2 
-            if ~turnOnFound
-                turnOnFound = 1;
-                vGTargTurnOn = currV;
-
-                findpeaks(currRho0NormSquared);
-
-                subplot(1,2,1);
-                title(sprintf('Tc Turn - Gate %d',gateIndSweep));
-                yyaxis left
-                plot(xx,currPotential);
-                yyaxis right
-                plot(xx,currRho0NormSquared);
-                drawnow;
-            end
-            
-            diff = abs(pks(2) - pks(1));
-            if currPeakDifference > diff
-                currPeakDifference = diff;
-                vGTargMax = currV;
-            else
-                maxTcFound = 1;
-                
-                subplot(1,2,2);
-                title(sprintf('Max Tc - Gate %d',gateIndSweep));
-                yyaxis left
-                plot(xx,currPotential);
-                yyaxis right
-                plot(xx,currRho0NormSquared);
-            end
-        end
-    end
-    pause(4);
-    delete(tcFigure);
-end
+% function [vGTargTurnOn, vGTargMax] = findTunnelCouplingTurnOn(sparams, xx, vVec,...
+%     vMinBnd, vMaxBnd, gateIndSweep)
+%     % What we want to do here is find the point in time where tunnel
+%     % coupling turns on.  So we will slowly sweep through the voltage (in
+%     % 0.01 mV increments until we find 2 peaks of the wavefunction (one of
+%     % the peaks should be incredibly small).  Then we will continue
+%     % sweeping until the peak heights are close to equal indicating maximal
+%     % tunnel coupling.  The first voltage point will be where we want to
+%     % sweep fast to and from there on we will sweep slowly.
+% 
+%     % Convert vVec from a list to a cell array and add on xx
+%     vVecCell = [num2cell(vVec),xx];
+%     
+%     turnOnFound = 0;
+%     maxTcFound = 0;
+%     
+%     currPeakDifference = 1E10;
+%     tcFigure = figure('pos',[0 0 1300 550]);
+%     movegui(tcFigure,'northeast');
+%     drawnow;
+%     title(sprintf('Finding Tc Points for Gate = %d',gateIndSweep));
+%     
+%     for currV = vMinBnd:1E-5:vMaxBnd
+%         if maxTcFound
+%             break;
+%         end
+%         vVecCell{gateIndSweep} = currV;
+%         currPotential = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCell));
+%         [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
+%         currRho0NormSquared = abs(currRho0).^2/norm(abs(currRho0).^2);
+%         
+%         pks = findpeaks(currRho0NormSquared);
+%         pks = pks(pks >= sparams.tcTuningThreshold);
+% 
+%         if length(pks) == 2 
+%             if ~turnOnFound
+%                 turnOnFound = 1;
+%                 vGTargTurnOn = currV;
+% 
+%                 findpeaks(currRho0NormSquared);
+% 
+%                 subplot(1,2,1);
+%                 title(sprintf('Tc Turn - Gate %d',gateIndSweep));
+%                 yyaxis left
+%                 plot(xx,currPotential);
+%                 yyaxis right
+%                 plot(xx,currRho0NormSquared);
+%                 drawnow;
+%             end
+%             
+%             diff = abs(pks(2) - pks(1));
+%             if currPeakDifference > diff
+%                 currPeakDifference = diff;
+%                 vGTargMax = currV;
+%             else
+%                 maxTcFound = 1;
+%                 
+%                 subplot(1,2,2);
+%                 title(sprintf('Max Tc - Gate %d',gateIndSweep));
+%                 yyaxis left
+%                 plot(xx,currPotential);
+%                 yyaxis right
+%                 plot(xx,currRho0NormSquared);
+%             end
+%         end
+%     end
+%     pause(4);
+%     delete(tcFigure);
+% end
 
 function vGTarg = findZeroDetuning( sparams, xx, vVec, gateIndSweep )
 %Finds what gate voltage value will give you zero detuning

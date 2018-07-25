@@ -2,9 +2,8 @@
 %LOADPOTENTIALS Function to either generate the potential profiles
 %automatically or load them from an external file
     
-    % Declare which simulated voltages you wish to load.
-    voltages = [0.6,0.693,0.785,0.8];
-
+    voltages = sparams.voltagesToLoad;
+    
     % Make the waitbar to show run time
     h = waitbar(0,sprintf('Loading file:'),...
         'Name',sprintf('Loading potentials...'),...

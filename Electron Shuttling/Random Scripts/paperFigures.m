@@ -277,7 +277,7 @@ end
 
 %%
 % Voltage pulse figure 5 gate
-gT = [0,0.015,0.125,0.235,0.25,0.265,0.375,0.485,0.5,0.515,0.625,0.735,0.75,0.765,0.875,0.985,1.0]*8;
+gT = [0,0.015,0.125,0.235,0.25,0.265,0.375,0.485,0.5,0.515,0.625,0.735,0.75,0.765,0.875,0.985,1.0];
 g1V = [0.8,0.8,0.8,0.791,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6];
 g2V = [0.6,0.791,0.799,0.799,0.799,0.799,0.799,0.791,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6];
 g3V = [0.6,0.6,0.6,0.6,0.6,0.791,0.7985,0.7985,0.7985,0.7985,0.7985,0.791,0.6,0.6,0.6,0.6,0.6];
@@ -291,10 +291,50 @@ plot(gT,g2V,'Linewidth',2.5);
 plot(gT,g3V,'Linewidth',2.5);
 plot(gT,g4V,'Linewidth',2.5);
 plot(gT,g5V,'Linewidth',2.5);
-xlabel('Time [ns]','Interpreter','Latex','Fontsize',22);
+xlabel('t/T','Interpreter','Latex','Fontsize',22);
 ylabel('Gate Voltage [V]','Interpreter','Latex','Fontsize',22);
 % xlim([1,length(sparams.voltagePulse(1,:))]);
-ylim([min(min(sparams.voltagePulse)),max(max(sparams.voltagePulse))*1.02]);
+ylim([0.6,0.8*1.02]);
 legend('V_1','V_2','V_3','V_4','V_5');
+
+
+%%
+% Processor speed figure
+init = 20E-9;
+tun = 2E-9;
+shuttle = 30*tun;
+Rswap = 1E-9;
+rabiT = logspace(-9,-6,401);
+piT = rabiT/2;
+chargeDet = 10E-9;
+empty = 10E-9;
+
+cZ = 3*piT/2 + Rswap + 2*piT + Rswap;
+meas = chargeDet + empty + cZ + piT/2;
+
+cycleT = init + shuttle + 4*tun + init + shuttle + 2*tun...
+    + piT + cZ + meas ...
+    + piT/2 + cZ + meas;
+fullcycleT = 4*cycleT;    
+% fullcycleF = 1./fullcycleT;
+
+figure;
+semilogx(1./rabiT,1./fullcycleT*1E-3,'Linewidth',2.0);
+set(gca,'Fontsize',14,'XGrid','on','YGrid','on',...
+    'GridAlpha',0.4,'MinorGridAlpha',0.6,'Linewidth',1);
+xlabel('Rabi Freq [Hz]','Interpreter','latex','Fontsize',22);
+ylabel('Full Cycle Rate [kHz]','Interpreter','latex','Fontsize',22);
+
+figure;
+tmT = 2*cycleT;
+N = 2000;
+tToFactor = 120*N^3*tmT/3600/24;
+semilogx(1./rabiT,tToFactor,'Linewidth',2.0);
+set(gca,'Fontsize',14,'XGrid','on','YGrid','on',...
+    'GridAlpha',0.4,'MinorGridAlpha',0.6,'Linewidth',1);
+xlabel('Rabi Freq [Hz]','Interpreter','latex','Fontsize',22);
+ylabel('Time to Factor [days]','Interpreter','latex','Fontsize',22);
+
+
 
 

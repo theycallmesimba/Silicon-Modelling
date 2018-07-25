@@ -1,4 +1,4 @@
-function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, timeInd )
+function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, time )
 %INITIALIZESHUTTLINGFIGURE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -15,7 +15,7 @@ function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, timeInd )
     
     hold on;
     set(gca,'Fontsize',axisFontSize);
-    title(['Shuttling Simulation ' num2str(sparams.totalTime(timeInd)) '[s]'],'interpreter','latex','fontsize',titleFontSize);
+    title(['Shuttling Simulation ' num2str(time) '[s]'],'interpreter','latex','fontsize',titleFontSize);
     xlabel('Position [nm]','Interpreter','Latex','Fontsize',labelFontSize);
     xlim([min(xx),max(xx)]);
     

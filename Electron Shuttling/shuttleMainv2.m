@@ -33,71 +33,65 @@ end
 debugHere = 1;
 if debugHere
     % Plot a random potential and the ground state
-    plotPotentialAndGroundWF(sparams,[0.8,0.7998,0.6,0.6,0.8],xx);
+    plotPotentialAndGroundWF(sparams,[0.8,0.6,0.6],xx);
 end
 
 %%
 % Get our desired votlage pulse.
-sparams = getVoltagePulse(sparams,xx);
+[~, time] = getVoltagePulseAdiabatic(sparams,xx,[0.001,0.01]);
 
-debugHere = 1;
+debugHere = 0;
 if debugHere
     fig = checkVoltagePulse(sparams);
     pause(5);
     delete(fig);
+    
+    analyzePulseAdiabicity(sparams,xx,idealTime,1,[2,3,4]);
 end
 %%
-% analyzeEEnergiesVersusPulse(sparams, xx);
-
 profile on;
-
-fprintf(1,'Getting initial wavefunction...\n');
-sparams = getInitialState(sparams,xx);
-
 
 % Using ref https://arxiv.org/pdf/1306.3247.pdf we now find the time
 % evolution operator U(t + dT,t) to evolve our initial wavefunction to the
 % next wavefunction.  That newly found wavefunction will act as our initial
 % state for the next time frame.  This method uses the split ooperator
 % approach
+[sweepVec, K, K2] = initializeShuttlingSimulation(sparams, pp);
+
+for jj = 1:length(sweepVec)
+    if strcmp(sparams.sweptParameter,'time')
+        fprintf(1,'Running time sweep shuttling simulation for %E (%d/%d)...\n',sweepVec(jj),jj,length(sweepVec));
+    elseif strcmp(sparams.sweptParameter,'adiabicity')
+        fprintf(1,'Running adiabatic sweep shuttling simulation for %E (%d/%d)...\n',sweepVec(jj),jj,length(sweepVec));
+    end
     
-% Make the KE operator since it is the same every time it is applied
-K = exp(-1i*sparams.dt/2*(pp.^2)/(2*sparams.me*sparams.hbar));
-K2 = K.*K;
-
-% Make the fidelity array
-% maxTime = max(sparams.totalTime);
-% maxLength = length(0:sparams.dt:maxTime);
-sparams.fidelity = zeros(length(sparams.totalTime),sparams.nFidelityFrames);
-sparams.starkShift = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
-
-sparams.avgEzGround = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
-sparams.avgEz = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
-sparams.vShiftGround = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
-sparams.vShift = zeros(length(sparams.totalTime),sparams.nStarkShiftFrames);
-
-% Let's create the folder to save data
-time = clock;
-sparams.saveFolder = sprintf('%d-%02d-%02d-%02d-%02d-%02d',time(1),time(2),time(3),time(4),time(5),round(time(6)));
-mkdir([sparams.saveDir sparams.saveFolder]);
-sparams.saveFolder = [sparams.saveFolder '/'];
-
-for jj = 1:length(sparams.totalTime)
-    mkdir([sparams.saveDir sparams.saveFolder num2str(sparams.totalTime(jj))]);
+    mkdir([sparams.saveDir sparams.saveFolder num2str(sweepVec(jj))]);
     
     tic;
+    
+    fprintf(1,'Building voltage pulse...\n');
+    % First step is to get the voltage pulse depending on our simulation
+    % type
+    if strcmp(sparams.sweptParameter,'time') 
+        sparams = getVoltagePulse(sparams,xx);
+    elseif strcmp(sparams.sweptParameter,'adiabicity')
+        [sparams, sparams.totalTime(jj)] = getVoltagePulseAdiabatic(sparams,xx,sweepVec(jj));
+    end
+    
+    fprintf(1,'Getting initial wavefunction...\n');
+    sparams = getInitialState(sparams,xx);
     
     % Now we need to make the individual gate interpolants for the pulse
     % First, we want to associate each potential simulation we have with a time
     % value (i.e. when in the simulation should that potential appear)
     tPots = linspace(0,sparams.totalTime(jj),length(sparams.voltagePulse(1,:)));
+    tTime = 0:sparams.dt:sparams.totalTime(jj);
+
+    % Build the pulse interpolants for this simulation
     sparams.vPulseGInterpolants = {};
     for vv = 1:sparams.numOfGates
         sparams.vPulseGInterpolants{vv} = griddedInterpolant({tPots},sparams.voltagePulse(vv,:));
     end
-    
-    % Get number of time steps
-    tTime = 0:sparams.dt:sparams.totalTime(jj);
 
     % Get time indices to save figures
     sparams.saveFigureIndices(jj,:) = round(linspace(1,length(tTime),sparams.nFigureFrames));
@@ -106,17 +100,25 @@ for jj = 1:length(sparams.totalTime)
     sparams.tStarkShift(jj,:) = tTime(sparams.starkShiftIndices(jj,:));
     sparams.fidelityIndices(jj,:) = round(linspace(1,length(tTime),sparams.nFidelityFrames));
     
-    fprintf(1,'Running shuttling simulation for %E (%d/%d)...\n',sparams.totalTime(jj),jj,length(sparams.totalTime));
-
-    % Make the waitbar to show run time
-    h = waitbar(0,sprintf('Current Time Index: %d/%d',0,length(tTime)),...
-        'Name',sprintf('Performing shuttling simulation for %E...',sparams.totalTime(jj)),...
-        'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+    % Make waitbar
+    if strcmp(sparams.sweptParameter,'time')        
+        % Make the waitbar to show run time
+        h = waitbar(0,sprintf('Current Time Index: %d/%d',0,length(tTime)),...
+            'Name',sprintf('Performing time shuttling simulation for %E...',sweepVec(jj)),...
+            'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+    elseif strcmp(sparams.sweptParameter,'adiabicity')        
+        % Make the waitbar to show run time
+        h = waitbar(0,sprintf('Current Time Index: %d/%d',0,length(tTime)),...
+            'Name',sprintf('Performing adiabatic shuttling simulation for %E...',sweepVec(jj)),...
+            'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+    end
     movegui(h,'northwest');
 
+    % Set current Psi to be the initial state
     currPsi = sparams.rho0';
     
-    shtlEvolutionFig = initializeShuttlingFigure(sparams, currPsi, currPsi, xx, jj);
+    % Initialize the shuttling simulation figure
+    shtlEvolutionFig = initializeShuttlingFigure(sparams, currPsi, currPsi, xx, sparams.totalTime(jj));
     
     nn = 1; % Used to index fidelity array
     ll = 0; % Used to know where in time domain to interpolate our potentials
@@ -208,8 +210,8 @@ for jj = 1:length(sparams.totalTime)
             
             updateShuttlingFigure(sparams,shtlEvolutionFig,ifft(fftshift(currPsip)),...
                 currRho0,currPotential);
-                        
-            saveGIFofEvolution(sparams, shtlEvolutionFig, tTime(ii), sparams.totalTime(jj));
+            
+            saveGIFofEvolution(sparams, shtlEvolutionFig, sweepVec(jj), tTime(ii));
         end
         
         % Calculate fidelity WRT current ground state
@@ -229,58 +231,19 @@ for jj = 1:length(sparams.totalTime)
     
     % Save the simulation results so far (in case of a shut down mid
     % simulation)
-    save([sparams.saveDir sparams.saveFolder 'simulationData'],'sparams','xx','zz');
+    save([sparams.saveDir sparams.saveFolder 'simulationData'],'sparams','xx','zz','pp');
     
     toc;
 end
 
 profile off
 profile viewer
-
-%% Post simulation Analysis
-% fids = sparams.fidelity;
-fids = sparams.fidelity;
-fids(fids==0) = NaN;
-[rows,cols] = size(fids);
-highTime = max(sparams.totalTime);
-fidTimeIndices = sparams.updateFidelity*sparams.dt:sparams.updateFidelity*sparams.dt:highTime;
-[TIndex,TTime] = meshgrid(fidTimeIndices,[0,sparams.totalTime,2*max(sparams.totalTime)]);
-fidelTemp = zeros(rows+2,cols);
-fidelTemp(2:(rows+1),:) = fids;
-
-figure;
-s = surf(TIndex,TTime,fidelTemp);
-set(s,'edgecolor','none');
-set(gca,'XScale','log');
-set(gca,'YScale','log');
-xlabel('Time step $t_j$ [s]','interpreter','latex','fontsize',15);
-ylabel('Total Shuttling Simulated Time [s]','interpreter','latex','fontsize',15);
-xlim([min(min(TIndex)),max(max(TIndex))]);
-ylim([0,2*max(sparams.totalTime)]);
-title('Fidelity: $$|\langle\Psi_0(t_j)|\Psi_{\rm sim}(t_j)\rangle|^2$$','interpreter','latex','fontsize',15);
-view(2);
-colormap(jet);
-colorbar;
-
-if sparams.calculateStarkShift
-    for ii = 1:length(sparams.totalTime)
-        if mod(ii-1,6) == 0
-            fig = figure;
-            pos = get(fig,'position');
-            set(fig,'position',[pos(1:2)/4 pos(3)*2.0 pos(4)*1.25]);
-        end
-
-        subplot(2,3,mod(ii-1,6)+1);
-        hold on;
-        plot(sparams.tStarkShift(ii,:),(sparams.vShift(ii,:)-sparams.vShift(ii,1))*1E-6);
-        plot(sparams.tStarkShift(ii,:),(sparams.vShiftGround(ii,:)-sparams.vShift(ii,1))*1E-6);
-        xlabel('Time index [s]','interpreter','latex','fontsize',10);
-        ylabel('$\nu - \nu_0$ [MHz]','interpreter','latex','fontsize',10);
-        title(['Shuttling Simulation ' num2str(sparams.totalTime(ii)) '[s]'],'interpreter','latex','fontsize',10);
-        drawnow;
-    end
-end
 %%
+% Post simulation Analysis
+analyzeFidelity(sparams)
+analyzeStarkShift(sparams)
+%% Post simulation Analysis
+
 figure;
 plot(linspace(0,4,sparams.nStarkShiftFrames),(sparams.vShiftGround(23,:) - sparams.vShiftGround(23,1))*1E-6,'Linewidth',2.5);
 line([0,4],[mean(sparams.vShiftGround(23,:) - sparams.vShiftGround(23,1)),mean(sparams.vShiftGround(23,:) - sparams.vShiftGround(23,1))]*1E-6,...
@@ -375,7 +338,9 @@ xlabel('Peak Height Threshold','Interpreter','Latex','Fontsize',22);
 ylabel('Voltage [V]','Interpreter','Latex','Fontsize',22);
 
 %%
-    
+sweepVec = getSweepVector(sparams);
+figure;
+plot(sweepVec,sparams.tStarkShift(:,500));
     
     
     
