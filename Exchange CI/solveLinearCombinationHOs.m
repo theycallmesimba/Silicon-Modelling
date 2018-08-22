@@ -5,16 +5,16 @@ function sparams = solveLinearCombinationHOs( sparams, X, Y, V )
     % Get the Laplacian
     full2DLap = make2DSELap(sparams,X,Y,V);
 
-    % Now we will rewrite the Hamiltonian in the Loe LOHO basis
-    HLOHO = zeros(sparams.nSingleOrbitals);
-    for ii = 1:(sparams.nSingleOrbitals)
-        currWFLeft = sparams.sLocalHOs(ii).wavefunctionMG;
-        for jj = 1:(sparams.nSingleOrbitals)
-            currWFRight = sparams.sLocalHOs(jj).wavefunctionNO;
-            HLOHO(ii,jj) = getInnerProduct(currWFLeft,...
-                convertNOtoMG(full2DLap*currWFRight,sparams.ngridx,sparams.ngridy),X,Y);
-        end
-    end
+%     % Now we will rewrite the Hamiltonian in the Loe LOHO basis
+%     HLOHO = zeros(sparams.nSingleOrbitals);
+%     for ii = 1:(sparams.nSingleOrbitals)
+%         currWFLeft = sparams.sLocalHOs(ii).wavefunctionMG;
+%         for jj = 1:(sparams.nSingleOrbitals)
+%             currWFRight = sparams.sLocalHOs(jj).wavefunctionNO;
+%             HLOHO(ii,jj) = getInnerProduct(currWFLeft,...
+%                 convertNOtoMG(full2DLap*currWFRight,sparams.ngridx,sparams.ngridy),X,Y);
+%         end
+%     end
     % Now we will rewrite the Hamiltonian in the non shifted HO basis
 %     HLOHO = zeros(sparams.nNonShiftedHOs);
 %     for ii = 1:(sparams.nNonShiftedHOs)

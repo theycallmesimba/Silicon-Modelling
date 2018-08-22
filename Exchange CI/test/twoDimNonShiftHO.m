@@ -7,14 +7,16 @@ classdef twoDimNonShiftHO < handle
         wavefunctionNO; % Wavefunction amplitude (in natural ordering format)
         n; % nth mode in x axis
         m; % mth mode in y axis
+        energy; % energy of wavefunction
     end
     
     methods
-        function obj = initialize(obj,wMG,wNO,nn,mm)
+        function obj = initialize(obj,wMG,wNO,nn,mm,en)
             obj.wavefunctionMG = wMG;
             obj.wavefunctionNO = wNO;
             obj.n = nn;
             obj.m = mm;
+            obj.energy = en;
         end
     end
     

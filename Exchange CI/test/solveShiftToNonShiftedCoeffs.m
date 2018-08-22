@@ -23,7 +23,7 @@ function [ sparams ] = solveShiftToNonShiftedCoeffs( sparams, X, Y )
             
             kk = kk + 1;
             % Update waitbar
-            if mod(kk,3) == 0
+            if mod(kk,20) == 0
                 waitbar(kk/(sparams.nSingleOrbitals*sparams.nNonShiftedHOs), h,...
                     sprintf('Shifted Index:%04d/%d  Non-shifted Index:%04d/%d',...
                     jj,sparams.nNonShiftedHOs,ii,sparams.nSingleOrbitals));
