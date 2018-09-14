@@ -1,4 +1,4 @@
-function inProd = getInnerProduct( wfL, wfR, XX, YY )
+function inProd = getInnerProduct2D( wfL, wfR, XX, YY )
 %GETINNERPRODUCT finds the inner product between two wavefunctions via
 %trapezoidal integration
 

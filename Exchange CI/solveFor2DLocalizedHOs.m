@@ -8,16 +8,16 @@ function sparams = solveFor2DLocalizedHOs( sparams, X, Y )
     % this 2D potential.
 
     % Solve for the normalized localized 1 dimensional Harmonic orbitals
-    sparams.localXHOs(sparams.nDots*(sparams.nLocalOrbitals+1)) = oneDimLOHO;
-    sparams.localYHOs(sparams.nDots*(sparams.nLocalOrbitals+1)) = oneDimLOHO;
-    sparams.localHOs(sparams.nSingleOrbitals) = twoDimLOHO;
+    sparams.XLOHOs(sparams.nDots*sparams.nLocalOrbitals) = oneDimLOHO;
+    sparams.YLOHOs(sparams.nDots*sparams.nLocalOrbitals) = oneDimLOHO;
+    sparams.LOHOs(sparams.nSingleOrbitals) = twoDimLOHO;
 
     for ii = 1:sparams.nDots
         omega = sparams.fittedPotentialParameters(ii,1);
         ax = sparams.fittedPotentialParameters(ii,3);
         ay = sparams.fittedPotentialParameters(ii,4);
         alpha = sqrt(sparams.me*omega/sparams.hbar);
-        for jj = linspace(0,sparams.nLocalOrbitals-1,sparams.nLocalOrbitals)
+        for jj = 0:(sparams.nLocalOrbitals-1)
             wfXTemp = 1/sqrt(2^jj*factorial(jj))*(alpha^2/pi)^(1/4)*...
                 exp(-alpha^2/2*(X(1,:) - ax).^2).*hermiteH(jj,alpha*(X(1,:) - ax));
             wfYTemp = 1/sqrt(2^jj*factorial(jj))*(alpha^2/pi)^(1/4)*...
@@ -26,35 +26,30 @@ function sparams = solveFor2DLocalizedHOs( sparams, X, Y )
             eXTemp = sparams.hbar*omega*(jj + 1/2);
             eYTemp = sparams.hbar*omega*(jj + 1/2);
             
-%             fprintf(1,'%d %d NormX = %f\n',ii,jj,trapz(X(1,:),wfXTemp.*wfXTemp));
-%             fprintf(1,'%d %d NormY = %f\n',ii,jj,trapz(Y(:,1),wfYTemp.*wfYTemp));
-            
-            sparams.localXHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).initialize(wfXTemp,jj,eXTemp,ii);
-            sparams.localYHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).initialize(wfYTemp,jj,eYTemp,ii);
+            sparams.XLOHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).initialize(wfXTemp,jj,eXTemp,ii);
+            sparams.YLOHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).initialize(wfYTemp,jj,eYTemp,ii);
         end
     end
 
     % Construct the local phi(x,y) HO wavefunctions
     ll = 0;
     for ii = 1:sparams.nDots
-        for jj = linspace(0,sparams.nLocalOrbitals-1,sparams.nLocalOrbitals)
-            for kk = linspace(0,sparams.nLocalOrbitals-1,sparams.nLocalOrbitals);
-                % Check n + m is not greater than our threshold for our
-                % basis set
-                if (jj + kk) <= sparams.maxLocal2DOrbital
-                    ll = ll + 1;
-
-                    currWFX = sparams.localXHOs(kk+1 + sparams.nLocalOrbitals*(ii-1)).wavefunction;
-                    currWFY = sparams.localYHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).wavefunction;
-                    currEX = sparams.localXHOs(kk+1 + sparams.nLocalOrbitals*(ii-1)).energy;
-                    currEY = sparams.localYHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).energy;
-                    currWF = currWFY*currWFX;
-                    
-%                     fprintf(1,'%d %d %d Norm = %f\n',ii,jj,kk,trapz(Y(:,1),trapz(X(1,:),wfTemp.*wfTemp,2)));
-                    sparams.localHOs(ll).initialize(currWF,convertMGtoNO(currWF),kk,jj,currEX + currEY,ii);
+        for jj = 0:(sparams.nLocalOrbitals-1)
+            for kk = 0:(sparams.nLocalOrbitals-1)
+                
+                if jj + kk >= sparams.nLocalOrbitals
+                    continue;
                 end
+                ll = ll + 1;
+
+                currWFX = sparams.XLOHOs(kk+1 + sparams.nLocalOrbitals*(ii-1)).wavefunction;
+                currWFY = sparams.YLOHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).wavefunction;
+                currEX = sparams.XLOHOs(kk+1 + sparams.nLocalOrbitals*(ii-1)).energy;
+                currEY = sparams.YLOHOs(jj+1 + sparams.nLocalOrbitals*(ii-1)).energy;
+                currWF = currWFY*currWFX;
+
+                sparams.LOHOs(ll).initialize(currWF,convertMGtoNO(currWF),kk,jj,currEX + currEY,ii);
             end
         end
     end
 end
-

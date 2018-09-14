@@ -49,7 +49,11 @@ function [ full2DLap ] = make2DSELap(sparams, X, Y, V )
     end
     
     % Multiply by coefficients for SE equation
-    KE2DLap = -sparams.hbar^2/(2*sparams.me)*KE2DLap;
+    if strcmp(sparams.unitsType,'Rydberg')
+        KE2DLap = -KE2DLap;
+    else
+        KE2DLap = -sparams.hbar^2/(2*sparams.me)*KE2DLap;
+    end
 
     full2DLap = PE2DLap + KE2DLap;
 end

@@ -3,12 +3,9 @@ function sparams = solveCMEsSingleParticlefromSameOrbital( sparams )
 %   Detailed explanation goes here
     % In an effort to reduce memory overhead, we will not include spin for
     % now (since there is no magnetic field this is easy to add in later).
-    sparams.CMEsSingleParticle = zeros(sparams.nSingleOrbitals^2, sparams.nSingleOrbitals^2);
+    sparams.CMEsSingleParticle = zeros(sparams.nNonShiftedHOs^2, sparams.nNonShiftedHOs^2);
     
     as = sparams.acoeffs;
-    bs = sparams.bcoeffs;
-    ascon = as';
-    bscon = bs';
     
     % This part is fairly simple in code.
     % We wish to convert our CMEs that we found in the non-shifted HO basis
@@ -52,10 +49,7 @@ function sparams = solveCMEsSingleParticlefromSameOrbital( sparams )
     % orbital basis using the sample procedure but with the acoeffs matrix
     % instead
 
-    sparams.CMEsLOHO = kron(bs,bs)*sparams.CMEsNonShifted*kron(bs',bs');
 %     sparams.CMEsSingleParticle = kron(inv(as),inv(as))*sparams.CMEsLOHO*kron(as,as);
-    sparams.CMEsSingleParticle = kron(as,as)*sparams.CMEsLOHO*kron(as',as');
-%     as = sparams.acoeffs;
-%     sparams.CMEsSingleParticle = kron(as',as')*sparams.CMEsNonShifted*kron(as,as);
+    sparams.CMEsSingleParticle = kron(as',as')*sparams.CMEsNonShifted*kron(as,as);
 end
 

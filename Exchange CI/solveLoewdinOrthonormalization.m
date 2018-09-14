@@ -3,27 +3,27 @@ function sparams = solveLoewdinOrthonormalization( sparams, X, Y )
 %   Detailed explanation goes here
 
     % First step is to get the overlap matrix
-    smatrixLocalHOs = zeros(sparams.nSingleOrbitals,sparams.nSingleOrbitals);
+    smatrixLOHOs = zeros(sparams.nSingleOrbitals,sparams.nSingleOrbitals);
     for ii = 1:sparams.nSingleOrbitals
-        currWFii = sparams.localHOs(ii).wavefunctionMG;
+        currWFii = sparams.LOHOs(ii).wavefunctionMG;
         for jj = 1:sparams.nSingleOrbitals
-            currWFjj = sparams.localHOs(jj).wavefunctionMG;
-            smatrixLocalHOs(ii,jj) = getInnerProduct(currWFii,currWFjj,X,Y);
+            currWFjj = sparams.LOHOs(jj).wavefunctionMG;
+            smatrixLOHOs(ii,jj) = getInnerProduct2D(currWFii,currWFjj,X,Y);
         end
     end
     
     % Now get the square root of the matrix
-    sparams.smatrixSQRTLocalHOs = sqrtm(smatrixLocalHOs);
+    sSQRTinv = sqrtm(smatrixLOHOs);
     
-    sSQRTinv = inv(sparams.smatrixSQRTLocalHOs);
+    sSQRTinv = inv(sSQRTinv);
     % Now we want to build up our new basis
     for ii = 1:sparams.nSingleOrbitals
         currWF = zeros(sparams.ngridy,sparams.ngridx);
         for jj = 1:sparams.nSingleOrbitals  
-            currWF = currWF + sSQRTinv(ii,jj)*sparams.localHOs(jj).wavefunctionMG;
+            currWF = currWF + sSQRTinv(ii,jj)*sparams.LOHOs(jj).wavefunctionMG;
         end
-        sparams.sLocalHOs(ii).wavefunctionMG = currWF;
-        sparams.sLocalHOs(ii).wavefunctionNO = convertMGtoNO(currWF);
+        sparams.loeLOHOs(ii).wavefunctionMG = currWF;
+        sparams.loeLOHOs(ii).wavefunctionNO = convertMGtoNO(currWF);
     end
 end
 
