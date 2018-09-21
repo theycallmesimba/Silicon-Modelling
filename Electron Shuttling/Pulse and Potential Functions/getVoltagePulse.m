@@ -1,4 +1,4 @@
-function sparams = getVoltagePulse( sparams, xx )
+function [sparams, voltagePulse]  = getVoltagePulse( sparams, xx )
 %GETVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -8,20 +8,16 @@ function sparams = getVoltagePulse( sparams, xx )
     % total time.  For now, we use a grid of 101 (+1 for t0) points.  So we have
     % accuracy of our control pulses to within 1% of our total time.  This
     % is easily adjustable if we need in the future.
+        
+    g1Min = 0.4;
+    g2Min = 0.4;
+    g3Min = 0.4;
+    g4Min = 0.4;
+    g5Min = 0.4;
     
-    nPts = 300;
-    
-    sparams.voltagePulse = zeros(sparams.numOfGates,nPts);
-    
-    g1Min = 0.6;
-    g2Min = 0.6;
-    g3Min = 0.6;
-    g4Min = 0.6;
-    g5Min = 0.6;
-    
-    g1Max = 0.8;
-    vMinBnd = 0.796;
-    vMaxBnd = 0.800;
+    g1Max = 0.68;
+    vMinBnd = 0.676;
+    vMaxBnd = 0.68;
     
 
     g2TurnTcOn = findTunnelCouplingTurnOn(sparams, xx,...
@@ -69,8 +65,9 @@ function sparams = getVoltagePulse( sparams, xx )
     gPulse{5,1} = [g5Min, g5Min, g5TurnTcOn, g5Max, g5Max];
     gPulse{5,2} = [0, 75, 76, 87.5, 100];
     
+    voltagePulse = zeros(sparams.numOfGates,sparams.nPulsePoints);
     for ii = 1:sparams.numOfGates
-        sparams.voltagePulse(ii,:) = interp1(gPulse{ii,2},gPulse{ii,1},linspace(0,100,nPts));
+        voltagePulse(ii,:) = interp1(gPulse{ii,2},gPulse{ii,1},linspace(0,100,sparams.nPulsePoints));
     end
 end
 

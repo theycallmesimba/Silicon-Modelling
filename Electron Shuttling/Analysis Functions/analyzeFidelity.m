@@ -11,9 +11,18 @@ function analyzeFidelity( sparams )
     xlabel('t/T','Fontsize',22,'Interpreter','Latex');
     ylabel('Fidelity','Fontsize',22,'Interpreter','Latex');
     
-    legVec = cell(1,length(sweepVec));
-    for ii = 1:length(sweepVec)
-        legVec{ii} = num2str(sweepVec(ii));
+    % Make waitbar
+    if strcmp(sparams.sweptParameter,'time')        
+        legVec = cell(1,length(sweepVec));
+        for ii = 1:length(sweepVec)
+            legVec{ii} = num2str(sweepVec(ii));
+        end
+    elseif strcmp(sparams.sweptParameter,'adiabicity')     
+        [rows,~] = size(sweepVec);
+        legVec = cell(1,rows);
+        for ii = 1:rows
+            legVec{ii} = [num2str(sweepVec(ii,1)) '-' num2str(sweepVec(ii,2))];
+        end
     end
     legend(legVec);
 end

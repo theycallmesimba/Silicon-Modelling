@@ -1,4 +1,4 @@
-function [sweepVec, K, K2] = initializeShuttlingSimulation( sparams, pp )
+function [sparams, sweepVec, K, K2] = initializeShuttlingSimulation( sparams, pp )
 %INITIALIZESHUTTLINGSIMULATION Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -32,5 +32,8 @@ function [sweepVec, K, K2] = initializeShuttlingSimulation( sparams, pp )
     if strcmp(sparams.sweptParameter,'adiabicity')
         sparams.totalTime = zeros(1,length(sweepVec));
     end
+    
+    % Initialize a matrix to store the voltage pulses.
+    sparams.voltagePulse = zeros(length(sweepVec), sparams.numOfGates, sparams.nPulsePoints);
 end
 

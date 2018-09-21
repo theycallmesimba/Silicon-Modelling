@@ -6,17 +6,18 @@ function [ wfs, ens ] = solve1DSingleElectronSE( sparams, nSols, X, V )
 %   V = potential function values in an array (must be same length
 %   as xx)
 %   solNum = number of solutions to return starting from the ground state
-%   consts = specifies values for calculation (hbar, effective mass,
-%   electorn charge, etc)
-%     [~,sparams.twoDEGindZ] = min(abs(zz - (-0.5*1E-9)));
-%     for ii = 1:length(sparams.potentials)
-%         sparams.potentials(ii).pot2DEG = sparams.potentials(ii).pot2D(sparams.twoDEGindZ,:);
-%     end 
+
     full1DLap = make1DSELap(sparams,X,V);
 
-    % Determine which eigs option to use to get the correct e-vectors
-    [eVectors, ens] = eigs(full1DLap,nSols,'sa');
-
+    % sigma = min(V) means will find the eigenvalues closest to min(V)
+    % which is faster than doing the 'sa' option.
+    [eVectors, ens] = eigs(full1DLap,nSols,min(V));
+    
+    % Output is sorted in descending order so let's fix that
+    [~, ind] = sort(diag(ens));
+    ens = ens(ind,ind);
+    eVectors = eVectors(:,ind);
+    
     wfs = zeros(length(X),nSols);
     for ii = 1:nSols
         wfs(:,ii) = eVectors(:,ii)/sqrt(getInnerProduct(X,eVectors(:,ii),eVectors(:,ii)));

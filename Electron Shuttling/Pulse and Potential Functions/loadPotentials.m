@@ -1,8 +1,11 @@
  function [ sparams, xxq, zzq ] = loadPotentials( sparams )
 %LOADPOTENTIALS Function to either generate the potential profiles
 %automatically or load them from an external file
-    
-    voltages = sparams.voltagesToLoad;
+        
+    nPotentialsToLoad = 1;
+    for ii = 1:sparams.numOfGates
+        nPotentialsToLoad = nPotentialsToLoad*length(sparams.voltagesToLoad{ii});
+    end
     
     % Make the waitbar to show run time
     h = waitbar(0,sprintf('Loading file:'),...
@@ -28,16 +31,11 @@
         
         % Update waitbar every N loaded potentials
         if mod(nn,5) == 0
-            waitbar(nn/(length(voltages)^sparams.numOfGates),...
-                h, sprintf('Loading file: %s',currFName));
+            waitbar(nn/nPotentialsToLoad, h, sprintf('Loading file: %s',currFName));
         end
         
         % Build the current file name
-        currFName = [];
-        for ii = 1:sparams.numOfGates
-            currFName = [currFName, sprintf('V%d_%0.3f_',ii,voltages(currFileVec(ii)))];
-        end
-        currFName = [currFName(1:end-1),'.csv'];
+        currFName = getPotentialFilenameToLoad( sparams, 1, currFileVec );
         
         % Load the csv file
         try
@@ -49,9 +47,6 @@
             if nn == 1
                 xdata = data(1,2:cols);
                 ydata = data(2:rows,1);
-
-                cutXData = find(xdata >= -200 & xdata <= 200);
-                xdata = xdata(cutXData);
 
                 % The data may not be uniform in sampling, so we need to fix that for
                 % the fourier transforms in the main code for speed up.
@@ -69,10 +64,13 @@
             end
             % Now interpolate potential and save it along with current voltage
             % values
-            sparams.potentials(nn).pot2D = -sparams.ee*interp2(XX,ZZ,zdata(:,cutXData),XXq,ZZq); % Convert to J and invert
-            sparams.potentials(nn).gateValues = voltages(currFileVec);
-    %         sparams.potentials(nn).gateValues = [voltages(currFileVec(3)),voltages(currFileVec(2)),...
-    %             voltages(currFileVec(1)),voltages(currFileVec(5)),voltages(currFileVec(4))];
+            sparams.potentials(nn).pot2D = -sparams.ee*interp2(XX,ZZ,zdata,XXq,ZZq); % Convert to J and invert
+            currVgVec = [];
+            for ii = 1:sparams.numOfGates
+                currVgVec = [currVgVec, sparams.voltagesToLoad{ii}(currFileVec(ii))];
+            end
+            sparams.potentials(nn).gateValues = currVgVec;
+            
             % Since we've saved our potential, increment the counter
             nn = nn + 1;
         catch
@@ -82,7 +80,7 @@
         % Break condition of the loop
         timeToBreak = ones(1,sparams.numOfGates);
         for ii = 1:sparams.numOfGates
-            if currFileVec(ii) == length(voltages)
+            if currFileVec(ii) == length(sparams.voltagesToLoad{ii})
                 timeToBreak(ii) = 1;
             else
                 timeToBreak(ii) = 0;
@@ -95,7 +93,7 @@
         % Increment the indexing vector
         for ii = sparams.numOfGates:-1:1
             currFileVec(ii) = currFileVec(ii) + 1;
-            if currFileVec(ii) > length(voltages)
+            if currFileVec(ii) > length(sparams.voltagesToLoad{ii})
                 currFileVec(ii) = 1;
             else
                 break;

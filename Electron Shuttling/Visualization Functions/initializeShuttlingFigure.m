@@ -1,8 +1,8 @@
-function fig = initializeShuttlingFigure( sparams, wf1, wf2, xx, time )
+function fig = initializeShuttlingFigure( sparams, vPulse, wf1, wf2, xx, time )
 %INITIALIZESHUTTLINGFIGURE Summary of this function goes here
 %   Detailed explanation goes here
 
-    vvInitial = sparams.P2DEGInterpolant([num2cell(sparams.voltagePulse(:,1)'),xx]);
+    vvInitial = sparams.P2DEGInterpolant([num2cell(vPulse(:,1)'),xx]);
     vvInitial = squeezeFast(sparams.numOfGates,vvInitial);
     
     fig = figure('pos',[0 0 1300 550]);

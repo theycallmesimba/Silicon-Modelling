@@ -1,5 +1,5 @@
 % Load all the parameters for the simulation
-clear sparams xx vv;
+clear sparams xx vv pp;
 shuttleParameterFile;
 
 fprintf(1,'Loading potentials...\n');
@@ -29,24 +29,19 @@ if debugHere
     checkPotentialLoad(sparams,xx,zz);
 end
 %%
-% Plot a random potential and the ground state
-debugHere = 1;
-if debugHere
-    % Plot a random potential and the ground state
-    plotPotentialAndGroundWF(sparams,[0.8,0.6,0.6],xx);
-end
-
-%%
 % Get our desired votlage pulse.
-[~, time] = getVoltagePulseAdiabatic(sparams,xx,[0.001,0.01]);
+% vec = [[0.01,0.01];[0.001,0.025];[0.001,0.05]];
+vec = [0.05,0.05];
+for ii = 1:length(vec(:,1))
+    [sparams, vPulse, vPulseTime] = getVoltagePulseAdiabatic(sparams,xx,vec(ii,:),0.8);
+    vPulseTime
+end
+sparams.voltagePulse = vPulse;
 
 debugHere = 0;
 if debugHere
-    fig = checkVoltagePulse(sparams);
-    pause(5);
-    delete(fig);
-    
-    analyzePulseAdiabicity(sparams,xx,idealTime,1,[2,3,4]);
+    analyzePulseAdiabicity(sparams,xx,squeeze(vPulse(1,:,:)),...
+        vPulseTime(1),1,1:4);
 end
 %%
 profile on;
@@ -56,16 +51,22 @@ profile on;
 % next wavefunction.  That newly found wavefunction will act as our initial
 % state for the next time frame.  This method uses the split ooperator
 % approach
-[sweepVec, K, K2] = initializeShuttlingSimulation(sparams, pp);
+[sparams, sweepVec, K, K2] = initializeShuttlingSimulation(sparams, pp);
 
 for jj = 1:length(sweepVec)
     if strcmp(sparams.sweptParameter,'time')
-        fprintf(1,'Running time sweep shuttling simulation for %E (%d/%d)...\n',sweepVec(jj),jj,length(sweepVec));
+        fprintf(1,'Running time sweep shuttling simulation for %.3E (%d/%d)...\n',sweepVec(jj),jj,length(sweepVec));
     elseif strcmp(sparams.sweptParameter,'adiabicity')
-        fprintf(1,'Running adiabatic sweep shuttling simulation for %E (%d/%d)...\n',sweepVec(jj),jj,length(sweepVec));
+        fprintf(1,'Running adiabatic sweep shuttling simulation for [%.3E,%.3E] (%d/%d)...\n',sweepVec(jj,1),sweepVec(jj,2),jj,length(sweepVec));
     end
     
-    mkdir([sparams.saveDir sparams.saveFolder num2str(sweepVec(jj))]);
+    % Make folder to save images for individual simulations
+    if strcmp(sparams.sweptParameter,'time')        
+        currSimFolder = num2str(sweepVec(jj));
+    elseif strcmp(sparams.sweptParameter,'adiabicity')     
+        currSimFolder = [num2str(sweepVec(jj,1)) '-' num2str(sweepVec(jj,2))];
+    end
+    mkdir([sparams.saveDir sparams.saveFolder currSimFolder]);
     
     tic;
     
@@ -73,25 +74,24 @@ for jj = 1:length(sweepVec)
     % First step is to get the voltage pulse depending on our simulation
     % type
     if strcmp(sparams.sweptParameter,'time') 
-        sparams = getVoltagePulse(sparams,xx);
+        [sparams, sparams.voltagePulse(jj,:,:)] = getVoltagePulse(sparams,xx);
     elseif strcmp(sparams.sweptParameter,'adiabicity')
-        [sparams, sparams.totalTime(jj)] = getVoltagePulseAdiabatic(sparams,xx,sweepVec(jj));
+        [sparams, temp, sparams.totalTime(jj)] = getVoltagePulseAdiabatic(sparams,xx,sweepVec(jj,:));
+        sparams.voltagePulse(jj,:,:) = temp;
     end
     
     fprintf(1,'Getting initial wavefunction...\n');
-    sparams = getInitialState(sparams,xx);
+    sparams = getInitialState(sparams,xx,squeeze(sparams.voltagePulse(jj,:,:)));
     
     % Now we need to make the individual gate interpolants for the pulse
     % First, we want to associate each potential simulation we have with a time
     % value (i.e. when in the simulation should that potential appear)
-    tPots = linspace(0,sparams.totalTime(jj),length(sparams.voltagePulse(1,:)));
+    tPots = linspace(0,sparams.totalTime(jj),length(sparams.voltagePulse(jj,1,:)));
     tTime = 0:sparams.dt:sparams.totalTime(jj);
 
     % Build the pulse interpolants for this simulation
-    sparams.vPulseGInterpolants = {};
-    for vv = 1:sparams.numOfGates
-        sparams.vPulseGInterpolants{vv} = griddedInterpolant({tPots},sparams.voltagePulse(vv,:));
-    end
+    sparams.vPulseGInterpolants = makePulseInterpolants(sparams, tPots,...
+        squeeze(sparams.voltagePulse(jj,:,:)));
 
     % Get time indices to save figures
     sparams.saveFigureIndices(jj,:) = round(linspace(1,length(tTime),sparams.nFigureFrames));
@@ -118,7 +118,8 @@ for jj = 1:length(sweepVec)
     currPsi = sparams.rho0';
     
     % Initialize the shuttling simulation figure
-    shtlEvolutionFig = initializeShuttlingFigure(sparams, currPsi, currPsi, xx, sparams.totalTime(jj));
+    shtlEvolutionFig = initializeShuttlingFigure(sparams, squeeze(sparams.voltagePulse(jj,:,:)),...
+        currPsi, currPsi, xx, sparams.totalTime(jj));
     
     nn = 1; % Used to index fidelity array
     ll = 0; % Used to know where in time domain to interpolate our potentials
@@ -211,7 +212,8 @@ for jj = 1:length(sweepVec)
             updateShuttlingFigure(sparams,shtlEvolutionFig,ifft(fftshift(currPsip)),...
                 currRho0,currPotential);
             
-            saveGIFofEvolution(sparams, shtlEvolutionFig, sweepVec(jj), tTime(ii));
+            saveGIFofEvolution(shtlEvolutionFig, sweepVec(jj), tTime(ii),...
+                [sparams.saveDir sparams.saveFolder currSimFolder]);
         end
         
         % Calculate fidelity WRT current ground state
