@@ -13,18 +13,18 @@ function [tc, epsL, epsR] = calculateTunnelCoupling( sparams, xx, vv )
     [wfPKS,~] = findpeaks(groundWF);
     wfPKS = wfPKS(wfPKS >= sparams.tcThreshold);
     if length(wfPKS) < 2
+        [epsL, epsR] = getDetuning(sparams, xx, vv);
         tc = 0;
         % Now we need to find the 
         return;
     elseif length(wfPKS) > 2
         fprintf(1,'Found more than 2 peaks when trying to calculate tunnel coupling.\n');
+        [epsL, epsR] = getDetuning(sparams, xx, vv);
         tc = 0;
         return;
     end
-    
-    dotLocs = [-60,0,60]*1E-9;
-    
-    [epsL, epsR] = getDetuning(sparams, xx, vv, dotLocs);
+        
+    [epsL, epsR] = getDetuning(sparams, xx, vv);
     
     dE = epsL - epsR;
     

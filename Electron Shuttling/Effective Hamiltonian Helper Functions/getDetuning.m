@@ -1,4 +1,4 @@
-function [ epsL, epsR ] = getDetuning( sparams, xx, vv, dotLocs )
+function [ epsL, epsR ] = getDetuning( sparams, xx, vv )
 %GETDETUNING Summary of this function goes here
     % We want to find the middle point that is defining the tunnel
     % coupling between the two dots.  This will let us create two
@@ -12,15 +12,22 @@ function [ epsL, epsR ] = getDetuning( sparams, xx, vv, dotLocs )
     % at.  To do this, we'll look at the potential, find the two lowest
     % peak points and use those.
     [pks,locs] = findpeaks(-vv);
+    % Make sure we can find at least two wells...
+    if length(locs) < 2        
+        epsL = 0;
+        epsR = 0;
+        return;
+    end
+    
     [~,sortInd] = sort(-pks);
     locs = locs(sortInd);
         
     % First dot...
-    [~,LDot] = min(abs(dotLocs - xx(locs(1))));
+    [~,LDot] = min(abs(sparams.dotLocs - xx(locs(1))));
     % Second dot...
-    [~,RDot] = min(abs(dotLocs - xx(locs(2))));
+    [~,RDot] = min(abs(sparams.dotLocs - xx(locs(2))));
         
-    midPoint = (dotLocs(LDot) + dotLocs(RDot))/2;
+    midPoint = (sparams.dotLocs(LDot) + sparams.dotLocs(RDot))/2;
     [~,locOfInterest] = min(abs(xx - midPoint));
     
     dx = xx(2) - xx(1);

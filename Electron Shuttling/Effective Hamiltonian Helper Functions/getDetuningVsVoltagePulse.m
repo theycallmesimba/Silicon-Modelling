@@ -1,4 +1,4 @@
-function [epsL, epsR] = getDetuningVsVoltagePulse( sparams, xx, vPulse )
+function [epsL, epsR] = getDetuningVsVoltagePulse( sparams, xx, vPulse, showWaitbar )
 %GETDETUNINGVSVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
     [~,nPts] = size(vPulse);
@@ -6,28 +6,32 @@ function [epsL, epsR] = getDetuningVsVoltagePulse( sparams, xx, vPulse )
     epsL = zeros(1,nPts);
     epsR = zeros(1,nPts);
     
-    h = waitbar(0,sprintf('Current point index: %d/%d',0,nPts),...
-        'Name','Finding detuning versus voltage pulse...',...
-        'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+    if showWaitbar
+        h = waitbar(0,sprintf('Current point index: %d/%d',0,nPts),...
+            'Name','Finding detuning versus voltage pulse...',...
+            'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+    end
     
     for ii = 1:nPts
         % Check for cancel button click
-        if getappdata(h,'canceling')
-            break;
+        if showWaitbar
+            if getappdata(h,'canceling')
+                break;
+            end
         end
-        if mod(ii,20) == 0
+        if mod(ii,20) == 0 && showWaitbar
             waitbar(ii/nPts, h, sprintf('Current point index: %d/%d',ii,nPts));
         end
-        currPotential = sparams.P2DEGInterpolant(getInterpolantArgument(sparams.voltagePulse(:,ii),xx));
+        currPotential = sparams.P2DEGInterpolant(getInterpolantArgument(vPulse(:,ii),xx));
         currPotential = squeezeFast(sparams.numOfGates,currPotential)';
 
         [~, epsL(ii), epsR(ii)] = calculateTunnelCoupling( sparams, xx, currPotential );
     end
+    if showWaitbar
+        delete(h);
+    end
     
-    delete(h);
-    
-    % TODO: Figure out what to do with outliers... For now just set any
-    % point = 0 (i.e. tc was undefined to the max value in eps
+    % Account for outliers by doing a constant extrapolation
     startInd = 0;
     foundZero = 0;
     interpPoints = 0;

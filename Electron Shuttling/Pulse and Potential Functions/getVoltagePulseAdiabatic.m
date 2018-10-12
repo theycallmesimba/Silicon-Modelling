@@ -1,4 +1,5 @@
-function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic( sparams, xx, adiabThreshVec, vMax, dotLocs )
+function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
+    sparams, xx, adiabThreshVec, vBounds, findAdiabatic, effHamiltonianParams )
 %GETVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,10 +8,13 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic( spara
     nGatesUsedInPulse = length(sparams.gatesUsedInPulse);
     sparams.tcMax = zeros(nGatesUsedInPulse-1,1);
     
-    gMin = ones(1,sparams.numOfGates)*(vMax - 0.2);
+    gMin = ones(1,sparams.numOfGates);
+    for ii = 1:sparams.numOfGates
+        gMin(1,ii) = vBounds(ii,1);
+    end
     gMax = gMin;
     
-    gMax(sparams.gatesUsedInPulse(1)) = vMax;
+    gMax(sparams.gatesUsedInPulse(1)) = vBounds(1,2);
     
     % Find the gate voltage that maximizes the tunnel coupling for each
     % gate
@@ -18,7 +22,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic( spara
         gArg = gMin;
         gArg(sparams.gatesUsedInPulse(ii-1)) = gMax(sparams.gatesUsedInPulse(ii-1));
 
-        [gMax(sparams.gatesUsedInPulse(ii)), sparams.tcMax(ii-1)] = findResonantTunnelCoupling(sparams, xx, gArg, sparams.gatesUsedInPulse(ii), dotLocs, 0);
+        [gMax(sparams.gatesUsedInPulse(ii)), sparams.tcMax(ii-1)] = findResonantTunnelCoupling(sparams, xx, gArg, sparams.gatesUsedInPulse(ii), 0);
     end
     
     % Now we will construct the rough outline of the pulse with the main
@@ -35,7 +39,6 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic( spara
     ptsBuf = xPoints(2)*fracBuf;
     nPtsSparse = round(ptsPerGate/2*fracNPoints);
     nPtsDense = round(ptsPerGate/2) - nPtsSparse;
-    ptsPerGate = nPtsSparse + nPtsDense;
     
     qXPoints = linspace(0,xPoints(2)-ptsBuf,nPtsSparse);
     qXPoints = [qXPoints, linspace(xPoints(2)-ptsBuf,xPoints(2),nPtsDense)];
@@ -76,8 +79,17 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic( spara
     yyaxis right
     semilogy(qXPoints,adiabQPoints);
     drawnow;
-    pause(2);
+    pause(1);
     delete(fig);
+    
+    % This flag is for if we just want a linear collection of voltage 
+    % points and don't want to find the corresponding adiabatic pulse
+    if ~findAdiabatic
+        voltagePulse = gPulse;
+        optPulseTime = NaN;
+        
+        return;
+    end
     
     % Now, we want to go through each point in our pulse and find what the
     % derivatve of each individual gate pulse should be at each point in
@@ -109,15 +121,14 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic( spara
     for ii = 1:length(qXPoints)        
         % For each point in the voltage pulse, find what time gives it the
         % adiabatic threshold parameter value
-        [optimalTimePower, optimalAdiabParams] = optimizeTimeForAdiabicity(sparams,xx,ii,...
-            length(qXPoints),gPulse,adiabPoints);
+        [optimalTimePower, ~] = optimizeTimeForAdiabicity(sparams,xx,ii,...
+            length(qXPoints),gPulse,adiabPoints,effHamiltonianParams);
         optimalTime(ii) = 10^optimalTimePower;
 
         % Get the corresponding dV/dt for whatever optimal time we found
         % above at the current index point on the voltage pulse
         tVec = linspace(0,optimalTime(ii),length(qXPoints));
         dt = tVec(2) - tVec(1);
-        dV = zeros(sparams.numOfGates,1);
         
         % Need to set a special condition for the end of the pulse
         if ii == length(qXPoints)
@@ -150,27 +161,52 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic( spara
 end
 
 function [time, adiabParams] = optimizeTimeForAdiabicity(sparams, xx, timeInd, numTimeInd,...
-    gPulse, thresholdVector)
+    gPulse, thresholdVector, effHamiltonianParams)
     
     % Get order of magnitude of threshold to set tolerance level
     options = optimset('TolX',10^floor(log10(thresholdVector(timeInd))));
-    
-    [time, ~] = fminbnd(@(qTimePower) optimizeAdiabaticParameter(qTimePower, 1, 1:4),...
-        sparams.timePowerBounds(1), sparams.timePowerBounds(2), options);
 
+    if strcmp(sparams.adiabaticPulseType,'coherent') 
+        [time, ~] = fminbnd(@(qTimePower) optimizeAdiabaticParameter(qTimePower, 1, 1:4),...
+            sparams.timePowerBounds(1), sparams.timePowerBounds(2), options);
+    elseif strcmp(sparams.adiabaticPulseType,'effective')
+        [time, ~] = fminbnd(@(qTimePower) optimizeAdiabaticParameterEffective(qTimePower, 1),...
+            sparams.timePowerBounds(1), sparams.timePowerBounds(2), options);
+    end
+    
     function diffWithThreshold = optimizeAdiabaticParameter(qTimePower, nn, mmVec)
         % First let's make the time vector and get the current time we are
         % interested in
         tVec = linspace(0,10^qTimePower,numTimeInd);
         cTime = tVec(timeInd);
-        
+
         % Make a new set of pulse interpolant objects based on the current time
         % vector
         pulseInterps = makePulseInterpolants(sparams,tVec,gPulse);
         
-        [adiabaticParam, adiabParams] = calculateAdiabaticParameter( sparams, xx,...
-            pulseInterps, cTime, nn, mmVec );
+        [adiabaticParam, adiabParams] = calculateAdiabaticParameter(...
+            sparams, xx, pulseInterps, cTime, nn, mmVec );
+
+        diffWithThreshold = abs(adiabaticParam - thresholdVector(timeInd));
+    end
+
+    function diffWithThreshold = optimizeAdiabaticParameterEffective(qTimePower, nn)
+        % First let's make the time vector and get the current time we are
+        % interested in
+        tVec = linspace(0,10^qTimePower,numTimeInd);
+        cTime = tVec(timeInd);
+
+        % Make a new set of pulse interpolant objects based on the current time
+        % vector
+%         pulseInterps = makePulseInterpolants(sparams,tVec,gPulse);
         
+        % Make a set of detuning interpolant objects based on the current
+        % time vector
+        detInterps = makeDetuningInterpolants(tVec,effHamiltonianParams);
+        
+        [adiabaticParam, adiabParams] = calculateAdiabaticParameterEffective(...
+            sparams, detInterps, cTime, nn, effHamiltonianParams );
+
         diffWithThreshold = abs(adiabaticParam - thresholdVector(timeInd));
     end
 end
@@ -203,6 +239,6 @@ function [gPulse, xPoints] = formRoughPulseOutline(sparams, gMin, gMax)
         plot(xPoints,gPulse(ii,:),'--o','Linewidth',1.5);
     end
     drawnow;
-    pause(2);
+    pause(1);
     delete(fig);
 end

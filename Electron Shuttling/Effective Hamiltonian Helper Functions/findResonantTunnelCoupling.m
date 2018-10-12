@@ -1,4 +1,4 @@
-function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gateIndSweep, dotLocs, plotResult)
+function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gateIndSweep, plotResult)
     % We want to find the point where the tunnel coupling is maximized
     % between two gates.  This is done by finding the voltage where the
     % gate being swept has maximum peak heights in both dots.
@@ -12,7 +12,7 @@ function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gate
     vVecCellpt1 = [num2cell(vVecpt1),xx];
     currPot = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCellpt1));
     
-    [epsLpt, epsRpt] = getDetuning(sparams, xx, currPot.', dotLocs);
+    [epsLpt, epsRpt] = getDetuning(sparams, xx, currPot.');
     
     % Now change the swept index by +/-.1 mV and see how detuning changes
     h = 0.1E-3;
@@ -20,13 +20,13 @@ function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gate
     vVecpt2(gateIndSweep) = max(vVec) - h;
     vVecCellpt2 = [num2cell(vVecpt2),xx];
     currPot = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCellpt2));
-    [epsLmh, epsRmh] = getDetuning(sparams, xx, currPot.', dotLocs);
+    [epsLmh, epsRmh] = getDetuning(sparams, xx, currPot.');
     
     vVecpt3 = vVec;
     vVecpt3(gateIndSweep) = max(vVec) + h;
     vVecCellpt3 = [num2cell(vVecpt3),xx];
     currPot = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCellpt3));
-    [epsLph, epsRph] = getDetuning(sparams, xx, currPot.', dotLocs);
+    [epsLph, epsRph] = getDetuning(sparams, xx, currPot.');
 
     % Now find which voltage makes them 0 detuning
     temp1 = (epsLpt - epsLmh)/h;
