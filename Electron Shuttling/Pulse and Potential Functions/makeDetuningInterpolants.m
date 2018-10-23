@@ -1,8 +1,6 @@
-function detInterpolants = makeDetuningInterpolants(gridPoints, effHamiltonianParams)
+function detInterpolants = makeDetuningInterpolants(gridPoints, epsL, epsR)
 %GETDETUNINGINTERPOLANTS Summary of this function goes here
 %   Detailed explanation goes here
-
-    [epsL, epsR, ~, ~, ~, ~, ~, ~] = decodeEffHamiltonianParamVariable(effHamiltonianParams);
     
     detInterpolants = {};
     detInterpolants{1} = griddedInterpolant({gridPoints},epsL);

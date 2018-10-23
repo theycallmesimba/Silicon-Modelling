@@ -37,45 +37,37 @@
         % Build the current file name
         currFName = getPotentialFilenameToLoad( sparams, 1, currFileVec );
         
-        % Load the csv file
-        try
-            data = dlmread([sparams.potDir currFName]);
-            [rows,cols] = size(data);
-            zdata = data(2:rows,2:cols);
-
-            % If we are on the first potential
-            if nn == 1
-                xdata = data(1,2:cols);
-                ydata = data(2:rows,1);
-
-                % The data may not be uniform in sampling, so we need to fix that for
-                % the fourier transforms in the main code for speed up.
-                % Find next highest power of 2 to the length of xx
-                desiredGridX = 2^(nextpow2(length(xdata)));
-                desiredGridZ = round(2.5*length(ydata));
-
-                % Make linearly spaced grid of points to interpolate the
-                % potential at
-                xxq = linspace(min(xdata),max(xdata),desiredGridX);
-                zzq = linspace(min(ydata),max(ydata),desiredGridZ);
-
-                [XX,ZZ] = meshgrid(xdata,ydata);
-                [XXq,ZZq] = meshgrid(xxq,zzq);
-            end
-            % Now interpolate potential and save it along with current voltage
-            % values
-            sparams.potentials(nn).pot2D = -sparams.ee*interp2(XX,ZZ,zdata,XXq,ZZq); % Convert to J and invert
-            currVgVec = [];
-            for ii = 1:sparams.numOfGates
-                currVgVec = [currVgVec, sparams.voltagesToLoad{ii}(currFileVec(ii))];
-            end
-            sparams.potentials(nn).gateValues = currVgVec;
+        if nn == 1
+            [xdata, ydata, zdata] = loadPotentialFile([sparams.potDir currFName]);
             
-            % Since we've saved our potential, increment the counter
-            nn = nn + 1;
-        catch
-            fprintf(1,'Failed to load: %s\n',currFName);
+            % The data may not be uniform in sampling, so we need to fix that for
+            % the fourier transforms in the main code for speed up.
+            % Find next highest power of 2 to the length of xx
+            desiredGridX = 2^(nextpow2(length(xdata)));
+            desiredGridZ = round(2.5*length(ydata));
+
+            % Make linearly spaced grid of points to interpolate the
+            % potential at
+            xxq = linspace(min(xdata),max(xdata),desiredGridX);
+            zzq = linspace(min(ydata),max(ydata),desiredGridZ);
+
+            [XX,ZZ] = meshgrid(xdata,ydata);
+            [XXq,ZZq] = meshgrid(xxq,zzq);
+        else
+            [~, ~, zdata] = loadPotentialFile(sparams, currFName);
         end
+        
+        % Now interpolate potential and save it along with current voltage
+        % values
+        sparams.potentials(nn).pot2D = -sparams.ee*interp2(XX,ZZ,zdata,XXq,ZZq); % Convert to J and invert
+        currVgVec = [];
+        for ii = 1:sparams.numOfGates
+            currVgVec = [currVgVec, sparams.voltagesToLoad{ii}(currFileVec(ii))];
+        end
+        sparams.potentials(nn).gateValues = currVgVec;
+
+        % Since we've saved our potential, increment the counter
+        nn = nn + 1;
         
         % Break condition of the loop
         timeToBreak = ones(1,sparams.numOfGates);

@@ -9,7 +9,7 @@ sparams.dx = xx(2) - xx(1);
 sparams.dz = zz(2) - zz(1);
 
 % Find which index corresponds to where the 2DEG should be
-[~,sparams.twoDEGindZ] = min(abs(zz - (-0.5*1E-9)));
+sparams.twoDEGindZ = getClosestArrayIndex(-0.5*1E-9, zz);
 for ii = 1:length(sparams.potentials)
     sparams.potentials(ii).pot2DEG = sparams.potentials(ii).pot2D(sparams.twoDEGindZ,:);
 end
@@ -21,22 +21,11 @@ sparams = makePotentialsInterpolants(sparams,xx,zz);
 
 % First step is to define our voltage search range and then find how the
 % detuning changes in that window.
-adiabThresh = [0.01,0.01];
-vBounds = [0.44,0.60; 0.44,0.6; 0.4,0.6];
+adiabThresh = [0.005,0.005];
+vBounds = [0.44,0.6; 0.44,0.6; 0.4,0.6];
 
 [~, voltagePulse, ~] = getVoltagePulseAdiabatic( sparams, xx, adiabThresh, vBounds, 0, NaN );
 [epsL, epsR] = getDetuningVsVoltagePulse( sparams, xx, voltagePulse, 1 );
-
-% figure;
-% hold on;
-% plot(epsL);
-% plot(epsR);
-% 
-% figure;
-% hold on;
-% for ii = 1:sparams.numOfGates
-%     plot(voltagePulse(ii,:));
-% end
 
 % Second step is to get the tunnel coupling at the maximum voltage point in
 % our pulse
@@ -45,8 +34,6 @@ tcVArg(sparams.gatesUsedInPulse(2)) = max(voltagePulse(sparams.gatesUsedInPulse(
 currPotential = sparams.P2DEGInterpolant(getInterpolantArgument(tcVArg,xx));
 currPotential = squeezeFast(sparams.numOfGates,currPotential)';
 tc = calculateTunnelCoupling( sparams, xx, currPotential );
-
-tc/sparams.ee
 %%
 % Third step is to sweep over spin orbit, valley, T2, etc and calculate an
 % adiabatic pulse
@@ -57,11 +44,14 @@ vBounds = [0.44,0.60; 0.44,0.6; 0.4,0.6];
 sparams.dt = 5E-14;
 
 dPhi = [0]*pi;
-valleyL = [30,60,90]*1E-6*sparams.ee;
-valleyR = [30,60,90]*1E-6*sparams.ee;
-spinOrbit = [0.2,1.0,2.0]*1E-6*sparams.ee;
-Ez = [40]*1E-6*sparams.ee;
-Ex = [1.6]*1E-6*sparams.ee;
+valleyL = logspace(1,3,40)*1E-6*sparams.ee;
+valleyR = [1]*1E-6*sparams.ee;
+spinOrbit = logspace(-1,1,40)*1E-6*sparams.ee;
+Ez = [80]*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+EL = 0;
+ER = 0;
+sparams.includeExcitedOrbital = 0;
 % dphi = 0.132*pi;
 % valleyL = [0]*1E-6*exp(1i*dphi)*sparams.ee;
 % valleyR = [0]*1E-6*sparams.ee;
@@ -109,7 +99,7 @@ for cc = 1:length(adiabThresh)
                     % If we don't need spin, just omit it from the
                     % simulation as it messes with the adiabatic pulse
                     % finding
-                    if spinOrbit(aa) == 0 || Ez(bb) == 0 || Ex(dd) == 0
+                    if Ez(bb) == 0 && Ex(dd) == 0
                         sparams.includeSpin = 0;
                     else
                         sparams.includeSpin = 1;
@@ -120,7 +110,7 @@ for cc = 1:length(adiabThresh)
                     mm = mm + 1;
                     fprintf(1,'(%d/%d): Adiabatic Threshold = %.3E [arb]\n',...
                         mm,length(T2Sweep)*length(valleyL)*length(valleyR)*length(dPhi)*...
-                        length(spinOrbit)*length(Ez)*length(Ex)*length(spinOrbit)*length(adiabThresh),...
+                        length(spinOrbit)*length(Ez)*length(Ex)*length(adiabThresh),...
                         adiabThresh(cc));
                     fprintf(1,'T2 = %.3E [s]\n',T2Sweep(ii));
                     fprintf(1,'ValleyL = %.3E [eV], ValleyR = %.3E [eV], Phase = %.3f\n',...
@@ -131,7 +121,7 @@ for cc = 1:length(adiabThresh)
                     % Put all the hamiltonian parameters into a single
                     % variable for ease
                     effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
-                        tc, Ez(bb), Ex(dd), valleyL(jj)*exp(1i*dPhi(pp)), valleyR(kk), spinOrbit(aa), spinOrbit(aa));
+                        tc, Ez(bb), Ex(dd), valleyL(jj)*exp(1i*dPhi(pp)), valleyL(jj), spinOrbit(aa), spinOrbit(aa), EL, ER);
 
                     % Get an adiabatic voltage pulse based on the voltage
                     % points given earlier and using the effective
@@ -166,6 +156,9 @@ for cc = 1:length(adiabThresh)
 end
 % profile viewer
 % profile off
+%%
+plotEffHamResults2D(valleyL, 'valleyL', spinOrbit, 'spinOrbit', pTime(1,1,:,1,1,:,1,1), 'pulseTime')
+plotEffHamResults2D(valleyL, 'valleyL', spinOrbit, 'spinOrbit', fidelity(1,1,:,1,1,:,1,1,end), 'fidelity')
 %%
 nPts = 500;
 dPhi = 0.132*pi;
@@ -203,4 +196,5 @@ effHamTemp = constructEffectiveHamiltonian( sparams, effHamParams);
 ensph = ensph/sparams.ee;
 [~, ind] = sort(diag(ensph));
 ketsph = ketsph(:,ind);
-%%
+
+

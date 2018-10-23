@@ -1,7 +1,17 @@
 function Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams)
 %CONSTRUCTEFFECTIVEHAMILTONIAN Summary of this function goes here
 %   Detailed explanation goes here
-    [epsL, epsR, tc, Ez, Ex, deltaL, deltaR, S1, S2] = decodeEffHamiltonianParamVariable(effHamiltonianParams);
+    [epsL, epsR, tc, Ez, Ex, deltaL, deltaR, S1, S2, EL, ER] = decodeEffHamiltonianParamVariable(effHamiltonianParams);
+    
+    % 
+    if sparams.includeExcitedOrbital
+        HtcMat = [tc(1), tc(3); tc(2), tc(4)];
+        HdotL = [epsL, 0; 0, (epsL + EL)];
+        HdotR = [epsR, 0; 0, (epsR + ER)];
+        
+        Heff = kron(HdotL,[1 0;0 0]) + kron(HtcMat',[0 1;0 0]) + kron(HtcMat,[0 0;1 0]) + kron(HdotR,[0 0;0 1]);
+        return
+    end
     
     if sparams.includeOrbital
         Hdet = [epsL 0;0 epsR];

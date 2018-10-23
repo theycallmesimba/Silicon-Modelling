@@ -55,6 +55,7 @@ sparams.sweptParameter = 'adiabicity';
 
 % % Effective Hamiltonian parameters
 sparams.includeOrbital = 1;
+sparams.includeExcitedOrbital = 0;
 sparams.includeValley = 1;
 sparams.includeSpin = 1;
 sparams.includeT2 = 0;

@@ -1,14 +1,21 @@
 function [fidelity, purity, orbExpValue, valExpValue, spinExpValue, finalRho] =...
-    simulateEffectiveShuttling(sparams, xx, vPulse, pTime, effHamParams, T2)
+    simulateEffectiveShuttling(sparams, xx, vPulse, pTime, effHamParams, T2, detPulseFlag)
 %SIMUALTEEFFECTIVESHUTTLING Summary of this function goes here
 %   Detailed explanation goes here
-
+    tic;
+    
     % Testing Xuedong paper
 %     pTime = 10E-9;
 
     pulseTVec = linspace(0,pTime,length(vPulse(1,:)));
 
-    [epsL, epsR] = getDetuningVsVoltagePulse( sparams, xx, vPulse, 1 );
+    % Are we given a voltage pulse or a detuning pulse as input
+    if detPulseFlag
+        epsL = vPulse(1,:);
+        epsR = vPulse(2,:);
+    else
+        [epsL, epsR] = getDetuningVsVoltagePulse( sparams, xx, vPulse, 1 );
+    end
     
     % Testing Xuedong paper
 %     epsL = linspace(-0.2,0.2,length(vPulse(1,:)))*1E-3*sparams.ee;
@@ -18,7 +25,7 @@ function [fidelity, purity, orbExpValue, valExpValue, spinExpValue, finalRho] =.
     effHamParams{1} = epsL;
     effHamParams{2} = epsR;
     
-    detInterpolants = makeDetuningInterpolants(pulseTVec,effHamParams);
+    detInterpolants = makeDetuningInterpolants(pulseTVec, epsL, epsR);
 
     time = 0:sparams.dt:pTime;
     fineEpsL = detInterpolants{1}({time});
@@ -132,22 +139,6 @@ function [fidelity, purity, orbExpValue, valExpValue, spinExpValue, finalRho] =.
             valExpValue(:,ll) = valExp;
             spinExpValue(:,ll) = spinExp;
         end
-%         if any(orbIndices == ii) && sparams.includeValley && sparams.includeSpin
-%             ll = ll + 1;
-%             orbExpValue(1,ll) = trace(currRho*kron(sparams.sigmaz,eye(4)));
-%             orbExpValue(2,ll) = trace(currRho*kron(sparams.sigmax,eye(4)));
-%             orbExpValue(3,ll) = trace(currRho*kron(sparams.sigmay,eye(4)));
-%         elseif any(orbIndices == ii) && (sparams.includeValley || sparams.includeSpin)
-%             ll = ll + 1;
-%             orbExpValue(1,ll) = trace(currRho*kron(sparams.sigmaz,eye(2)));
-%             orbExpValue(2,ll) = trace(currRho*kron(sparams.sigmax,eye(2)));
-%             orbExpValue(3,ll) = trace(currRho*kron(sparams.sigmay,eye(2)));
-%         elseif any(orbIndices == ii)
-%             ll = ll + 1;
-%             orbExpValue(1,ll) = trace(currRho*sparams.sigmaz);
-%             orbExpValue(2,ll) = trace(currRho*sparams.sigmax);
-%             orbExpValue(3,ll) = trace(currRho*sparams.sigmay);
-%         end
     end
     
     finalRho = currRho;

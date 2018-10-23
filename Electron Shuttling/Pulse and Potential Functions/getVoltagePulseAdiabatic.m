@@ -72,14 +72,17 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     
     fig = figure;
     hold on;
+    xlabel('Time [arb]','Interpreter','Latex');
     yyaxis left
     for ii = 1:sparams.numOfGates
         plot(qXPoints,gPulse(ii,:),'--o','Linewidth',1.5);
     end
+    xlabel('Voltage [V]','Interpreter','Latex');
     yyaxis right
     semilogy(qXPoints,adiabQPoints);
+    ylabel('Adiabatic parameter [arb]','Interpreter','Latex');
     drawnow;
-    pause(1);
+    pause(0.75);
     delete(fig);
     
     % This flag is for if we just want a linear collection of voltage 
@@ -196,13 +199,10 @@ function [time, adiabParams] = optimizeTimeForAdiabicity(sparams, xx, timeInd, n
         tVec = linspace(0,10^qTimePower,numTimeInd);
         cTime = tVec(timeInd);
 
-        % Make a new set of pulse interpolant objects based on the current time
-        % vector
-%         pulseInterps = makePulseInterpolants(sparams,tVec,gPulse);
-        
         % Make a set of detuning interpolant objects based on the current
         % time vector
-        detInterps = makeDetuningInterpolants(tVec,effHamiltonianParams);
+        [epsL, epsR, ~, ~, ~, ~, ~, ~] = decodeEffHamiltonianParamVariable(effHamiltonianParams);
+        detInterps = makeDetuningInterpolants(tVec, epsL, epsR);
         
         [adiabaticParam, adiabParams] = calculateAdiabaticParameterEffective(...
             sparams, detInterps, cTime, nn, effHamiltonianParams );
@@ -225,7 +225,8 @@ function [gPulse, xPoints] = formRoughPulseOutline(sparams, gMin, gMax)
             break;
         end
         
-        % Pulse point where two gate voltages are high and tc is maxed
+        % Pulse point where two gate voltages are high and tc is maxed (i.e
+        % 0 detuning)
         gArg(sparams.gatesUsedInPulse(ii+1)) = gMax(sparams.gatesUsedInPulse(ii+1));
         gPulse = [gPulse, gArg'];
     end
@@ -239,6 +240,6 @@ function [gPulse, xPoints] = formRoughPulseOutline(sparams, gMin, gMax)
         plot(xPoints,gPulse(ii,:),'--o','Linewidth',1.5);
     end
     drawnow;
-    pause(1);
+    pause(0.75);
     delete(fig);
 end

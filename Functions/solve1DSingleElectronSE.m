@@ -12,7 +12,7 @@ function [ wfs, ens ] = solve1DSingleElectronSE( sparams, nSols, X, V )
     % sigma = min(V) means will find the eigenvalues closest to min(V)
     % which is faster than doing the 'sa' option.
     [eVectors, ens] = eigs(full1DLap,nSols,min(V));
-    
+
     % Output is sorted in descending order so let's fix that
     [~, ind] = sort(diag(ens));
     ens = ens(ind,ind);

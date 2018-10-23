@@ -1,5 +1,5 @@
 function effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
-    tc, Ez, Ex, deltaL, deltaR, S1, S2)
+    tc, Ez, Ex, deltaL, deltaR, S1, S2, EL, ER)
 %BUILDEFFHAMILTONIANPARAMVARIABLE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -12,5 +12,7 @@ function effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
     effHamiltonianParams{7} = deltaR;
     effHamiltonianParams{8} = S1;
     effHamiltonianParams{9} = S2;
+    effHamiltonianParams{10} = EL;
+    effHamiltonianParams{11} = ER;
 end
 
