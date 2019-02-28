@@ -6,11 +6,12 @@ function [sparams, sweepVec, K, K2] = initializeShuttlingSimulation( sparams, pp
     sweepVec = getSweepVector(sparams);
     
     % Get momentum operator for simulation
-    K = exp(-1i*sparams.dt/2*(pp.^2)/(2*sparams.me*sparams.hbar));
+    K = exp(-1i*sparams.dt/2*(pp'.^2)/(2*sparams.me*sparams.hbar));
     K2 = K.*K;
+    K2 = K2;
     
     % Make the fidelity array
-    sparams.fidelity = zeros(length(sweepVec),sparams.nFidelityFrames);
+    sparams.fidelity = zeros(length(sweepVec),sparams.nStoreDataFrames);
     
     % Mark Stark shift data arrays
     if sparams.calculateStarkShift
@@ -34,6 +35,6 @@ function [sparams, sweepVec, K, K2] = initializeShuttlingSimulation( sparams, pp
     end
     
     % Initialize a matrix to store the voltage pulses.
-    sparams.voltagePulse = zeros(length(sweepVec), sparams.numOfGates, sparams.nPulsePoints);
+    sparams.voltagePulse = zeros(length(sweepVec), length(sparams.gatesUsedInPulse), sparams.nPulsePoints);
 end
 

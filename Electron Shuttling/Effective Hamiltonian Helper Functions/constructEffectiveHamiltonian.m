@@ -3,12 +3,19 @@ function Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams)
 %   Detailed explanation goes here
     [epsL, epsR, tc, Ez, Ex, deltaL, deltaR, S1, S2, EL, ER] = decodeEffHamiltonianParamVariable(effHamiltonianParams);
     
-    % 
+    % If we want to include the excited orbital we will ignore all of the
+    % other effective hamiltonian parameters (for now... maybe add that
+    % functionality in later)
     if sparams.includeExcitedOrbital
-        HtcMat = [tc(1), tc(3); tc(2), tc(4)];
+        if length(tc) == 1
+            HtcMat = [tc, tc, tc, tc];
+        else
+            HtcMat = [tc(1), tc(3); tc(2), tc(4)];
+        end
         HdotL = [epsL, 0; 0, (epsL + EL)];
         HdotR = [epsR, 0; 0, (epsR + ER)];
         
+%         Heff = kron([1 0;0 0],HdotL) + kron([0 1;0 0],HtcMat') + kron([0 0;1 0],HtcMat) + kron([0 0;0 1],HdotR);
         Heff = kron(HdotL,[1 0;0 0]) + kron(HtcMat',[0 1;0 0]) + kron(HtcMat,[0 0;1 0]) + kron(HdotR,[0 0;0 1]);
         return
     end
@@ -88,6 +95,11 @@ function Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams)
         Heff = HzeemanZ + HzeemanX;
     else
         Heff = NaN;
+    end
+    
+    if sparams.includeSecondSpin
+        [rows,~] = size(Heff);
+        Heff = kron(Heff,eye(2)) + kron(eye(rows),[Ez Ex;Ex -Ez]);
     end
 end
 

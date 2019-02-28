@@ -2,22 +2,28 @@ function sparams = makePotentialsInterpolants( sparams, xx, zz )
 %MAKEPOTENTIALSINTERPOLANTS Summary of this function goes here
 %   Detailed explanation goes here
 
-    % Get the gate
+    % Get all the gate values loaded
     allGateValues = reshape([sparams.potentials.gateValues],sparams.numOfGates,[])';
 
+    % Make the function argument for the grid vectors for loadable gate
+    % voltages which is used to make the gridded interpolant
     argGridVecVolts = {};
-    for ii = 1:sparams.numOfGates
-        argGridVecVolts = [argGridVecVolts,unique(allGateValues(:,ii))];
+    for ii = 1:length(sparams.interpableGates)
+        argGridVecVolts = [argGridVecVolts,unique(allGateValues(:,sparams.interpableGates(ii)))];
     end
 
+    % Make the function argument for the magnitude of the grid vectors
+    % which is used to reshape the structure variable
+    % sparams.potentials.pot2D(EG)
     argReshapeMagnitudes = [sparams.nzGrid,sparams.nxGrid];
-    for ii = sparams.numOfGates:-1:1
+    for ii = length(sparams.interpableGates):-1:1
         argReshapeMagnitudes = [argReshapeMagnitudes,length(argGridVecVolts{ii})];
     end
 
-    argPermutation2D = [(sparams.numOfGates:-1:1) + 2,1,2];
-    argPermutation2DEG = [(sparams.numOfGates:-1:1) + 1,1];
-
+    % Need to permute the reshaped sparams.potentials.pot2D(EG)
+    argPermutation2D = [(length(sparams.gatesUsedInPulse):-1:1) + 2,1,2];
+    argPermutation2DEG = [(length(sparams.gatesUsedInPulse):-1:1) + 1,1];
+    
     % Create the potentials interpolant
     sparams.P2DInterpolant = griddedInterpolant([argGridVecVolts,zz,xx],...
         permute(reshape([sparams.potentials.pot2D],...

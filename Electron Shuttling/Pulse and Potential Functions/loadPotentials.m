@@ -1,19 +1,19 @@
- function [ sparams, xxq, zzq ] = loadPotentials( sparams )
+ function [ sparams, xx, zz ] = loadPotentials( sparams, interpFlag, fileFormatType, interpDirs, trimFlag )
 %LOADPOTENTIALS Function to either generate the potential profiles
 %automatically or load them from an external file
-        
+
     nPotentialsToLoad = 1;
     for ii = 1:sparams.numOfGates
         nPotentialsToLoad = nPotentialsToLoad*length(sparams.voltagesToLoad{ii});
     end
-    
+        
     % Make the waitbar to show run time
     h = waitbar(0,sprintf('Loading file:'),...
         'Name',sprintf('Loading potentials...'),...
         'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
     set(findall(h,'type','text'),'Interpreter','none');
     set(findall(h),'Units','normalized');
-    set(h,'Position',[0.25,0.4,0.3,0.08]);
+    set(h,'Position',[0.25,0.4,0.5,0.15]);
     
     currFileVec = ones(1,sparams.numOfGates);
     nn = 1;
@@ -30,36 +30,24 @@
         end    
         
         % Update waitbar every N loaded potentials
-        if mod(nn,5) == 0
+        if mod(nn,3) == 0
             waitbar(nn/nPotentialsToLoad, h, sprintf('Loading file: %s',currFName));
         end
         
         % Build the current file name
-        currFName = getPotentialFilenameToLoad( sparams, 1, currFileVec );
+        currFName = getPotentialFilenameToLoad( sparams, 1, currFileVec, fileFormatType );
         
+        % Load the actual file (interpolation is done during loading here)
         if nn == 1
-            [xdata, ydata, zdata] = loadPotentialFile([sparams.potDir currFName]);
-            
-            % The data may not be uniform in sampling, so we need to fix that for
-            % the fourier transforms in the main code for speed up.
-            % Find next highest power of 2 to the length of xx
-            desiredGridX = 2^(nextpow2(length(xdata)));
-            desiredGridZ = round(2.5*length(ydata));
-
-            % Make linearly spaced grid of points to interpolate the
-            % potential at
-            xxq = linspace(min(xdata),max(xdata),desiredGridX);
-            zzq = linspace(min(ydata),max(ydata),desiredGridZ);
-
-            [XX,ZZ] = meshgrid(xdata,ydata);
-            [XXq,ZZq] = meshgrid(xxq,zzq);
+            [xx, zz, pot2D_XZ] = loadPotentialFile(sparams,[sparams.potDir currFName],...
+                interpFlag,fileFormatType,interpDirs,trimFlag);
         else
-            [~, ~, zdata] = loadPotentialFile(sparams, currFName);
+            [~, ~, pot2D_XZ] = loadPotentialFile(sparams,[sparams.potDir currFName],...
+                interpFlag,fileFormatType,interpDirs,trimFlag);
         end
         
-        % Now interpolate potential and save it along with current voltage
-        % values
-        sparams.potentials(nn).pot2D = -sparams.ee*interp2(XX,ZZ,zdata,XXq,ZZq); % Convert to J and invert
+        % Convert to J and invert
+        sparams.potentials(nn).pot2D = pot2D_XZ;
         currVgVec = [];
         for ii = 1:sparams.numOfGates
             currVgVec = [currVgVec, sparams.voltagesToLoad{ii}(currFileVec(ii))];
@@ -93,9 +81,6 @@
         end
     end
     delete(h);
-    
-    xxq = xxq*1E-9; % Convert to m
-    zzq = zzq*1E-9; 
 end
 
  

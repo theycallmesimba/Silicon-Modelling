@@ -22,7 +22,7 @@ sparams = makePotentialsInterpolants(sparams,xx,zz);
 % First step is to define our voltage search range and then find how the
 % detuning changes in that window.
 adiabThresh = [0.005,0.005];
-vBounds = [0.44,0.6; 0.44,0.6; 0.4,0.6];
+vBounds = [0.54,0.6; 0.54,0.6; 0.4,0.6];
 
 [~, voltagePulse, ~] = getVoltagePulseAdiabatic( sparams, xx, adiabThresh, vBounds, 0, NaN );
 [epsL, epsR] = getDetuningVsVoltagePulse( sparams, xx, voltagePulse, 1 );
@@ -35,58 +35,151 @@ currPotential = sparams.P2DEGInterpolant(getInterpolantArgument(tcVArg,xx));
 currPotential = squeezeFast(sparams.numOfGates,currPotential)';
 tc = calculateTunnelCoupling( sparams, xx, currPotential );
 %%
-% Third step is to sweep over spin orbit, valley, T2, etc and calculate an
-% adiabatic pulse
-% profile on
-T2Sweep = 100000E-9;
-adiabThresh = [0.005];
-vBounds = [0.44,0.60; 0.44,0.6; 0.4,0.6];
-sparams.dt = 5E-14;
-
-dPhi = [0]*pi;
-valleyL = logspace(1,3,40)*1E-6*sparams.ee;
-valleyR = [1]*1E-6*sparams.ee;
-spinOrbit = logspace(-1,1,40)*1E-6*sparams.ee;
-Ez = [80]*1E-6*sparams.ee;
+%*********************************************************************%
+%%
+%*COMPLETE*
+saveName = 'Ez-75-tc-40-dPhi-2pi5-VLvsSO';
+dPhi =  2*pi/5;
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = linspace(0,2.0,50)*1E-6*sparams.ee;
 Ex = [0]*1E-6*sparams.ee;
+Ez = [75]*1E-6*sparams.ee;
+tc = 40E-6*sparams.ee;
 EL = 0;
 ER = 0;
-sparams.includeExcitedOrbital = 0;
-% dphi = 0.132*pi;
-% valleyL = [0]*1E-6*exp(1i*dphi)*sparams.ee;
-% valleyR = [0]*1E-6*sparams.ee;
-% spinOrbit = [0]*1E-6*sparams.ee;
-% Ez = [0]*1E-6*sparams.ee;
-% Ex = [0]*1E-6*sparams.ee;
+%%
+% COMPLETE
+saveName = 'Ez-75-tc-40-dPhi-3pi5-VLvsSO';
+dPhi =  3*pi/5;
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = linspace(0,2.0,50)*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+Ez = [75]*1E-6*sparams.ee;
+tc = 40E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% COMPLETE
+saveName = 'Ez-40-tc-75-dPhi-2pi5-VLvsSO';
+dPhi =  2*pi/5;
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = linspace(0,2.0,50)*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+Ez = [40]*1E-6*sparams.ee;
+tc = 75E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% COMPLETE
+saveName = 'Ez-40-tc-75-dPhi-3pi5-VLvsSO';
+dPhi =  3*pi/5;
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = linspace(0,2.0,50)*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+Ez = [40]*1E-6*sparams.ee;
+tc = 75E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% COMPLETE
+saveName = 'Ez-75-tc-40-SO-0.4-VLvsdPhi.mat';
+dPhi =  linspace(0,pi,50);
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = 0.4*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+Ez = [75]*1E-6*sparams.ee;
+tc = 40E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% COMPLETE
+saveName = 'Ez-75-tc-40-SO-2.0-VLvsdPhi.mat';
+dPhi =  linspace(0,pi,50);
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = 2.0*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+Ez = [75]*1E-6*sparams.ee;
+tc = 40E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% COMPLETE
+saveName = 'Ez-40-tc-75-SO-0.4-VLvsdPhi.mat';
+dPhi =  linspace(0,pi,50);
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = 0.4*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+Ez = [40]*1E-6*sparams.ee;
+tc = 75E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% RUNNING
+saveName = 'Ez-40-tc-75-SO-2.0-VLvsdPhi.mat';
+dPhi =  linspace(0,pi,50);
+valleyL = linspace(25,250,50)*1E-6*sparams.ee;
+valleyR = [150]*1E-6*sparams.ee;
+spinOrbit = 2.0*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+Ez = [40]*1E-6*sparams.ee;
+tc = 75E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% saveName = 'TEMP';
+T2Sweep = 100000E-9;
+adiabThresh = 0.005;
+vBounds = [0.44,0.60; 0.44,0.6; 0.44,0.6];
+dBounds = [0, 1500E-6;0, 1500E-6]*sparams.ee;
+sparams.dt = 5E-14;
 
-pTime = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+sparams.includeExcitedOrbital = 0;
+sparams.includeSecondSpin = 1;
+sparams.stateIndices = 1;
+sparams.nnIndices = 1;
+
+pulseTime = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
     length(dPhi),length(spinOrbit),length(Ez),length(Ex));
 fidelity = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),sparams.nFidelityFrames);
-purity = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),sparams.nPurityFrames);
-orbExp = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),3,sparams.nExpectationFrames);
-orbFRho = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),2,2);
-valExp = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),3,sparams.nExpectationFrames);
-valFRho = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),2,2);
-spinExp = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),3,sparams.nExpectationFrames);
-spinFRho = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
-    length(dPhi),length(spinOrbit),length(Ez),length(Ex),2,2);
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),sparams.nStoreDataFrames);
+
+totPurity = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),sparams.nStoreDataFrames);
+orbPurity = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),sparams.nStoreDataFrames);
+valPurity = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),sparams.nStoreDataFrames);
+spinPurity = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),sparams.nStoreDataFrames);
+
+orbExpectation = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),3,sparams.nStoreDataFrames);
+valExpectation = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),3,sparams.nStoreDataFrames);
+spinExpectation = zeros(length(adiabThresh),length(T2Sweep),length(valleyL),length(valleyR),...
+    length(dPhi),length(spinOrbit),length(Ez),length(Ex),3,sparams.nStoreDataFrames);
+
 
 uu = 1;
 mm = 0;
+startTime = clock;
+nLoops = length(T2Sweep)*length(valleyL)*length(valleyR)*length(dPhi)*...
+    length(spinOrbit)*length(Ez)*length(Ex)*length(adiabThresh);
 for cc = 1:length(adiabThresh)
     for ii = 1:length(T2Sweep)
         for jj = 1:length(valleyL)
         for kk = 1:length(valleyR)
-        for pp = 1:length(dPhi) 
+        for pp = 1:length(dPhi)
             % If we don't need valley, just omit from the simulation as it
-            % messes with the adiabatic pulse finding
+            % messes with the adiabatic pulse finding due to the degenerate
+            % ground states
             if valleyL(jj) == 0 || valleyR(kk) == 0
                 sparams.includeValley = 0;
             else
@@ -98,54 +191,82 @@ for cc = 1:length(adiabThresh)
                 for dd = 1:length(Ex)
                     % If we don't need spin, just omit it from the
                     % simulation as it messes with the adiabatic pulse
-                    % finding
+                    % finding due to the degenerate ground states
                     if Ez(bb) == 0 && Ex(dd) == 0
                         sparams.includeSpin = 0;
                     else
                         sparams.includeSpin = 1;
                     end
 
+                    if mm ~= 0
+                        % Estaimte the remaining runtime
+                        elapsedTime = etime(clock,startTime);
+                        
+                        avgTimePerLoop = elapsedTime/mm;
+                        avgTimeRemaining = avgTimePerLoop*(nLoops - mm);
+                        if avgTimeRemaining > 3600
+                            fprintf(1,'\nTime remaining: %4.1f hours\n\n',avgTimeRemaining/3600);
+                        elseif avgTimeRemaining > 60
+                            fprintf(1,'\nTime remaining: %4.1f minutes\n\n',avgTimeRemaining/60);
+                        else
+                            fprintf(1,'\nTime remaining: %4.1f seconds\n\n',avgTimeRemaining);
+                        end
+                    end
+                    
                     % Display to use what parameters are bein probed right
                     % now
                     mm = mm + 1;
+                    fprintf(1,'********************************************\n');
                     fprintf(1,'(%d/%d): Adiabatic Threshold = %.3E [arb]\n',...
-                        mm,length(T2Sweep)*length(valleyL)*length(valleyR)*length(dPhi)*...
-                        length(spinOrbit)*length(Ez)*length(Ex)*length(adiabThresh),...
-                        adiabThresh(cc));
-                    fprintf(1,'T2 = %.3E [s]\n',T2Sweep(ii));
+                        mm, nLoops, adiabThresh(cc));
+                    fprintf(1,'tc = %.3E [eV], T2 = %.3E [s]\n',tc/sparams.ee,T2Sweep(ii));
                     fprintf(1,'ValleyL = %.3E [eV], ValleyR = %.3E [eV], Phase = %.3f\n',...
                         valleyL(jj)/sparams.ee, valleyR(kk)/sparams.ee, dPhi(pp));
-                    fprintf(1,'Ez = %.3E [eV], Ex = %.3E [eV], Spin Orbit = %.3E [eV]\n',...
+                    fprintf(1,'Ez = %.3E [eV], Ex = %.3E [eV], Spin Orbit = %.3E [eV]\n\n',...
                         Ez(bb)/sparams.ee, Ex(dd)/sparams.ee, spinOrbit(aa)/sparams.ee);
 
                     % Put all the hamiltonian parameters into a single
                     % variable for ease
                     effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
-                        tc, Ez(bb), Ex(dd), valleyL(jj)*exp(1i*dPhi(pp)), valleyL(jj), spinOrbit(aa), spinOrbit(aa), EL, ER);
+                        tc, Ez(bb), Ex(dd), valleyL(jj)*exp(1i*dPhi(pp)), valleyR(kk), spinOrbit(aa), spinOrbit(aa), EL, ER);
 
                     % Get an adiabatic voltage pulse based on the voltage
                     % points given earlier and using the effective
                     % Hamiltonian parameters
-                    [sparams, voltagePulse, pTimeTemp] = getVoltagePulseAdiabatic(...
-                        sparams, xx, [adiabThresh(cc),adiabThresh(cc)], vBounds, 1, effHamiltonianParams );
-                    fprintf(1,'Pulse found!\nPulse time = %.6E [s]\n',pTimeTemp);
-
-                    % Using the adiabatic voltage pulse, run an effective
-                    % shuttling simulation.
-                    fprintf(1,'Now doing effective shuttling simulation using found pulse...\n\n');
-                    [fidTemp, purTemp, orbExpTemp, valExpTemp, spinExpTemp, fRho] =...
-                        simulateEffectiveShuttling(sparams, xx, voltagePulse, pTimeTemp, effHamiltonianParams, T2Sweep(ii));
-
-                    % Store some data and calculate some partial traces
-                    pTime(cc,ii,jj,kk,pp,aa,bb,dd) = pTimeTemp;
-                    fidelity(cc,ii,jj,kk,pp,aa,bb,dd,:) = fidTemp;
-                    purity(cc,ii,jj,kk,aa,bb,dd,:) = purTemp;
-                    orbExp(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = orbExpTemp;
-                    orbFRho(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = partialTrace(fRho,[2,3],[2,2,2]); 
-                    valExp(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = valExpTemp;
-                    valFRho(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = partialTrace(fRho,[1,3],[2,2,2]); 
-                    spinExp(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = spinExpTemp;
-                    spinFRho(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = partialTrace(fRho,[1,2],[2,2,2]);   
+%                     [sparams, voltagePulse, pTimeTemp] = getVoltagePulseAdiabatic(...
+%                         sparams, xx, [adiabThresh(cc),adiabThresh(cc)], vBounds, 1, effHamiltonianParams );
+%                     fprintf(1,'Pulse found!\nPulse time = %.6E [s]\n',pTimeTemp);
+% 
+%                     % Using the adiabatic voltage pulse, run an effective
+%                     % shuttling simulation.
+%                     fprintf(1,'Now doing effective shuttling simulation using found pulse...\n\n');
+%                     [rhos, Hams] = simulateEffectiveShuttling(sparams, xx,...
+%                         voltagePulse, pTimeTemp, effHamiltonianParams, T2Sweep(ii), 0);
+                    
+                    %****************%
+                    fprintf(1,'Finding adiabatic pulse...\n');
+                    [sparams, detuningPulse, pTimeTemp] = getDetuningPulseAdiabatic(...
+                        sparams, [adiabThresh(cc), adiabThresh(cc)], dBounds, 1, effHamiltonianParams );
+                    fprintf(1,'Found pulse time = %.6E [s]\n\n',pTimeTemp);
+                    fprintf(1,'Simulating electron shuttling (effective Hamiltonian)...\n');
+                    [rhos, Hams] = simulateEffectiveShuttling(sparams, xx, detuningPulse, pTimeTemp, effHamiltonianParams, NaN, 1);
+                    fprintf(1,'********************************************\n');
+                    %****************%
+                    
+                    % Analyze the data from the simulation
+                    results = analyzeEffectiveShuttlingResults(sparams, rhos, Hams);
+                    
+                    pulseTime(cc,ii,jj,kk,pp,aa,bb,dd) = pTimeTemp;
+                    fidelity(cc,ii,jj,kk,pp,aa,bb,dd,:) = results.fidelity;
+                    
+                    totPurity(cc,ii,jj,kk,pp,aa,bb,dd,:) = results.totPur;
+                    orbPurity(cc,ii,jj,kk,pp,aa,bb,dd,:) = results.orbPur;
+                    valPurity(cc,ii,jj,kk,pp,aa,bb,dd,:) = results.valPur;
+                    spinPurity(cc,ii,jj,kk,pp,aa,bb,dd,:) = results.spinPur;
+                    
+                    orbExpectation(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = results.orbExp;
+                    valExpectation(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = results.valExp;
+                    spinExpectation(cc,ii,jj,kk,pp,aa,bb,dd,:,:) = results.spinExp;   
                 end
                 end
             end
@@ -154,47 +275,83 @@ for cc = 1:length(adiabThresh)
         end
     end
 end
+
+save(saveName);
+fprintf(1,'Total simulation run time: %4.1f seconds\n\n',etime(clock,startTime));
+fprintf(1,'********************************************\n');
 % profile viewer
 % profile off
 %%
-plotEffHamResults2D(valleyL, 'valleyL', spinOrbit, 'spinOrbit', pTime(1,1,:,1,1,:,1,1), 'pulseTime')
-plotEffHamResults2D(valleyL, 'valleyL', spinOrbit, 'spinOrbit', fidelity(1,1,:,1,1,:,1,1,end), 'fidelity')
+phaseInd = 1;
+velocity = (40E-9+20E-9)./pulseTime;
+plotEffHamResults2D(valleyL, 'valleyL', spinOrbit, 'spinOrbit', pulseTime(1,1,:,1,phaseInd,:,1,1), 'pulseTime');
+plotEffHamResults2D(valleyL, 'valleyL', spinOrbit, 'spinOrbit', velocity(1,1,:,1,phaseInd,:,1,1), 'velocity');
+plotEffHamResults2D(valleyL, 'valleyL', spinOrbit, 'spinOrbit', fidelity(1,1,:,1,phaseInd,:,1,1,end), 'singlet fidelity');
 %%
-nPts = 500;
-dPhi = 0.132*pi;
-valleyL = [60]*1E-6*exp(1i*dPhi)*sparams.ee;
-valleyR = [30]*1E-6*sparams.ee;
-spinOrbit = [0.2]*1E-6*sparams.ee;
+soInd = 6;
+velocity = (40E-9+20E-9)./pulseTime;
+cutOffdPhi = 1;
+plotEffHamResults2D(valleyL, 'valleyL', dPhi(1:end-cutOffdPhi), 'dPhi', pulseTime(1,1,:,1,1:end-cutOffdPhi,soInd,1,1), 'pulseTime');
+plotEffHamResults2D(valleyL, 'valleyL', dPhi(1:end-cutOffdPhi), 'dPhi', velocity(1,1,:,1,1:end-cutOffdPhi,soInd,1,1), 'velocity');
+plotEffHamResults2D(valleyL, 'valleyL', dPhi(1:end-cutOffdPhi), 'dPhi', fidelity(1,1,:,1,1:end-cutOffdPhi,soInd,1,1,end), 'singlet fidelity');
+% plotEffHamResults2D(valleyL, 'valleyL', dPhi(1:end-cutOffdPhi), 'dPhi', orbExpectation(1,1,:,1,1:end-cutOffdPhi,soInd,1,1,3,end), 'orbital expectation');
+% export_fig 'test.jpg' -m5
+%%
+dP = 0;
+vL = [158.3]*1E-6*sparams.ee;
+vR = [150]*1E-6*sparams.ee;
+sO = [2]*1E-6*sparams.ee;
+Ez = [75]*1E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+tc = 40E-6*sparams.ee;
+aThresh = 0.005;
+sparams.includeExcitedOrbital = 0;
+sparams.includeSecondSpin = 1;
+sparams.stateIndices = 1;
+sparams.nnIndices = 1;
+det = 1500E-6;
+dBounds = [0, det;0, det]*sparams.ee;
+
+effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
+    tc, Ez, Ex, vL*exp(1i*dP), vR, sO, sO, EL, ER);
+%****************%
+% [sparams, detuningPulse, pTimeTemp] = getDetuningPulseAdiabatic(...
+%     sparams, [aThresh,aThresh], dBounds, 1, effHamiltonianParams );
+% pTimeTemp
+% fprintf(1,'Pulse found!\nPulse time = %.6E [s]\n',pTimeTemp);
+% [rhos, Hams] = simulateEffectiveShuttling(sparams, xx, detuningPulse, pTimeTemp, effHamiltonianParams, NaN, 1);
+%****************%
+% results = analyzeEffectiveShuttlingResults(sparams, rhos, Hams);
+% results.fidelity(end)
+%%
+%%nPts = 400;
+dP = pi/3;
+vL = [150]*1E-6*sparams.ee;
+vR = [150]*1E-6*sparams.ee;
+sO = [2]*1E-6*sparams.ee;
 Ez = [40]*1E-6*sparams.ee;
-Ex = [1.6]*1E-6*sparams.ee;
-tc = 45E-6*sparams.ee;
+Ex = [0]*1E-6*sparams.ee;
+tc = 75*1E-6*sparams.ee;
+E0 = 0E-3*sparams.ee;
+nPts = 500;
 
-effHamiltonianParams = buildEffHamiltonianParamVariable(NaN, NaN,...
-    tc, Ez, Ex, valleyL, valleyR, spinOrbit, spinOrbit);
-
-epsL = linspace(-0.2,0.2,nPts)*1E-3*sparams.ee;
-epsR = linspace(0.2,-0.2,nPts)*1E-3*sparams.ee;
-
-energies = zeros(8,nPts);
-for ii = 1:nPts
-    effHamiltonianParams{1} = epsL(ii);
-    effHamiltonianParams{2} = epsR(ii);
-    Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams);
-    
-    [kets,ens] = eig(Heff);
-    [~, ind] = sort(diag(ens));
-    ens = ens(ind,ind);
-    energies(:,ii) = diag(ens);
-end
-
-plot(epsL,energies/sparams.ee,'Linewidth',2);
-%%
+sparams.includeSpin = 0;
 sparams.includeValley = 1;
-effHamParams = buildEffHamiltonianParamVariable(0, 0, tc, NaN, valleySplit(jj), valleySplit(jj), NaN, NaN);
-effHamTemp = constructEffectiveHamiltonian( sparams, effHamParams);
-[ketsph,ensph] = eig(effHamTemp);
-ensph = ensph/sparams.ee;
-[~, ind] = sort(diag(ensph));
-ketsph = ketsph(:,ind);
+sparams.includeSecondSpin = 0;
+sparmas.includeExcitedOrbital = 0;
+
+% det = 1500E-6/2;
+det = 800E-6/2;
+epsL = linspace(-det,det,nPts)*sparams.ee + E0;
+epsR = linspace(det,-det,nPts)*sparams.ee + E0;
+
+
+effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
+    tc, Ez, Ex, vL*exp(-1i*dP/2), vR*exp(1i*dP/2), sO, sO, NaN, NaN);
+
+% analyzeEffectiveEnergySpectrum(sparams, effHamiltonianParams, 'detuning', {'spin','Z'});
+analyzeEffectiveEnergySpectrum(sparams, effHamiltonianParams, 'detuning', {'none',''});
+
+export_fig 'valley-orbitEnergySpectrum' -m5
 
 

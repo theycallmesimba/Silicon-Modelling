@@ -2,30 +2,32 @@ function [adiabParamNNTotal, adiabParamInd] = calculateAdiabaticParameter( spara
     pulseInterpolants, cTime, nn, mmVec )
     
     h = sparams.hdt;
-
+    
+    nGates = length(sparams.gatesUsedInPulse);
+    
     % Get current pulse point plus the shifted ones as well (+h,+2h,-h,-2h)
     currPulse = getInterpolatedPulseValues(sparams,...
         [cTime-(2*h),cTime-h,cTime,cTime+h,cTime+(2*h)],pulseInterpolants);
     
     currPot = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,3),xx));
-    currPot = squeezeFast(sparams.numOfGates,currPot)';
+    currPot = squeezeFast(nGates,currPot)';
     [WFs,ens] = solve1DSingleElectronSE(sparams, max(mmVec), xx, currPot);
     
     % Estimate the derivative of the nth WF using a five point stencil
     currPotp2h = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,5),xx));
-    currPotp2h = squeezeFast(sparams.numOfGates,currPotp2h)';
+    currPotp2h = squeezeFast(nGates,currPotp2h)';
     [fxp2h,~] = solve1DSingleElectronSE(sparams, max(mmVec), xx, currPotp2h);
 
     currPotph = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,4),xx));
-    currPotph = squeezeFast(sparams.numOfGates,currPotph)';
+    currPotph = squeezeFast(nGates,currPotph)';
     [fxph,~] = solve1DSingleElectronSE(sparams, max(mmVec), xx, currPotph);
 
     currPotmh = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,2),xx));
-    currPotmh = squeezeFast(sparams.numOfGates,currPotmh)';
+    currPotmh = squeezeFast(nGates,currPotmh)';
     [fxmh,~] = solve1DSingleElectronSE(sparams, max(mmVec), xx, currPotmh);
 
     currPot2mh = sparams.P2DEGInterpolant(getInterpolantArgument(currPulse(:,1),xx));
-    currPot2mh = squeezeFast(sparams.numOfGates,currPot2mh)';
+    currPot2mh = squeezeFast(nGates,currPot2mh)';
     [fxm2h,~] = solve1DSingleElectronSE(sparams, max(mmVec), xx, currPot2mh);
     
     % Now, the SE equation solver uses eigs which can output a random +/-1

@@ -13,7 +13,8 @@ function saveGIFofEvolution(fig, currSweepValue, currTime, currSaveFolder)
             'gif','LoopCount',Inf,'DelayTime',0);
     end
     
-    fullNameJPEG = [currSaveFolder '/shuttle' num2str(currTime) '.jpeg'];
-    imwrite(A,map,fullNameJPEG);
+    fullNamePNG = [currSaveFolder '/shuttle' num2str(currTime) '.png'];
+    export_fig(fullNamePNG,'-m1','-painters');
+%     imwrite(A,map,fullNamePNG);
 end
 

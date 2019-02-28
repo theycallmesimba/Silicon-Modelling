@@ -2,8 +2,11 @@
 clear sparams xx vv pp;
 shuttleParameterFile;
 
+% profile on
 fprintf(1,'Loading potentials...\n');
-[sparams,xx,zz] = loadPotentials(sparams);
+[sparams,xx,zz] = loadPotentials(sparams, 1, 'nextnano', 'x', 1);
+% profile off
+% profile viewer
 
 sparams.nxGrid = length(xx);
 sparams.nzGrid = length(zz);
@@ -21,20 +24,23 @@ end
 % Now we want to make the potential interpolant object (both 2D and 2DEG)
 % sparams = makePotentialsInterpolants(sparams,xx,zz);
 sparams = makePotentialsInterpolants(sparams,xx,zz);
-
+%%
 % Check that the potentials were loaded correctly and that the interpolants
 % were correctly assembled
 debugHere = 0;
 if debugHere
     checkPotentialLoad(sparams,xx,zz);
 end
+
+testPot = sparams.P2DEGInterpolant({0.2,0.30,0.30,xx});
+testPot = squeezeFast(length(sparams.interpableGates),testPot);
+plot(xx,testPot/sparams.ee);
 %%
 % Get our desired votlage pulse.
 % vec = [[0.01,0.01];[0.001,0.025];[0.001,0.05]];
 vec = [0.05,0.05];
 for ii = 1:length(vec(:,1))
     [sparams, vPulse, vPulseTime] = getVoltagePulseAdiabatic(sparams,xx,vec(ii,:),0.8);
-    vPulseTime
 end
 sparams.voltagePulse = vPulse;
 
@@ -44,29 +50,23 @@ if debugHere
         vPulseTime(1),1,1:4);
 end
 %%
-profile on;
+%*************************************************************************%
+% profile on;
 
 % Using ref https://arxiv.org/pdf/1306.3247.pdf we now find the time
 % evolution operator U(t + dT,t) to evolve our initial wavefunction to the
 % next wavefunction.  That newly found wavefunction will act as our initial
-% state for the next time frame.  This method uses the split ooperator
+% state for the next time frame.  This method uses the split operator
 % approach
-[sparams, sweepVec, K, K2] = initializeShuttlingSimulation(sparams, pp);
+[sparams, sweepVec, ~, ~] = initializeShuttlingSimulation(sparams, pp);
 
+% sweepVec = [0.07,0.07;0.02,0.02];
 for jj = 1:length(sweepVec)
     if strcmp(sparams.sweptParameter,'time')
         fprintf(1,'Running time sweep shuttling simulation for %.3E (%d/%d)...\n',sweepVec(jj),jj,length(sweepVec));
     elseif strcmp(sparams.sweptParameter,'adiabicity')
         fprintf(1,'Running adiabatic sweep shuttling simulation for [%.3E,%.3E] (%d/%d)...\n',sweepVec(jj,1),sweepVec(jj,2),jj,length(sweepVec));
     end
-    
-    % Make folder to save images for individual simulations
-    if strcmp(sparams.sweptParameter,'time')        
-        currSimFolder = num2str(sweepVec(jj));
-    elseif strcmp(sparams.sweptParameter,'adiabicity')     
-        currSimFolder = [num2str(sweepVec(jj,1)) '-' num2str(sweepVec(jj,2))];
-    end
-    mkdir([sparams.saveDir sparams.saveFolder currSimFolder]);
     
     tic;
     
@@ -76,160 +76,11 @@ for jj = 1:length(sweepVec)
     if strcmp(sparams.sweptParameter,'time') 
         [sparams, sparams.voltagePulse(jj,:,:)] = getVoltagePulse(sparams,xx);
     elseif strcmp(sparams.sweptParameter,'adiabicity')
-        [sparams, temp, sparams.totalTime(jj)] = getVoltagePulseAdiabatic(sparams,xx,sweepVec(jj,:));
-        sparams.voltagePulse(jj,:,:) = temp;
+        [sparams, sparams.voltagePulse(jj,:,:), sparams.totalTime(jj)] =...
+            getVoltagePulseAdiabatic(sparams,xx,sweepVec(jj,:),sparams.voltagePulseBounds,1,NaN);
     end
     
-    fprintf(1,'Getting initial wavefunction...\n');
-    sparams = getInitialState(sparams,xx,squeeze(sparams.voltagePulse(jj,:,:)));
-    
-    % Now we need to make the individual gate interpolants for the pulse
-    % First, we want to associate each potential simulation we have with a time
-    % value (i.e. when in the simulation should that potential appear)
-    tPots = linspace(0,sparams.totalTime(jj),length(sparams.voltagePulse(jj,1,:)));
-    tTime = 0:sparams.dt:sparams.totalTime(jj);
-
-    % Build the pulse interpolants for this simulation
-    sparams.vPulseGInterpolants = makePulseInterpolants(sparams, tPots,...
-        squeeze(sparams.voltagePulse(jj,:,:)));
-
-    % Get time indices to save figures
-    sparams.saveFigureIndices(jj,:) = round(linspace(1,length(tTime),sparams.nFigureFrames));
-    % Get time indices and corresponding time values to calculate and save starkShift
-    sparams.starkShiftIndices(jj,:) = round(linspace(1,length(tTime),sparams.nStarkShiftFrames));
-    sparams.tStarkShift(jj,:) = tTime(sparams.starkShiftIndices(jj,:));
-    sparams.fidelityIndices(jj,:) = round(linspace(1,length(tTime),sparams.nFidelityFrames));
-    
-    % Make waitbar
-    if strcmp(sparams.sweptParameter,'time')        
-        % Make the waitbar to show run time
-        h = waitbar(0,sprintf('Current Time Index: %d/%d',0,length(tTime)),...
-            'Name',sprintf('Performing time shuttling simulation for %E...',sweepVec(jj)),...
-            'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-    elseif strcmp(sparams.sweptParameter,'adiabicity')        
-        % Make the waitbar to show run time
-        h = waitbar(0,sprintf('Current Time Index: %d/%d',0,length(tTime)),...
-            'Name',sprintf('Performing adiabatic shuttling simulation for %E...',sweepVec(jj)),...
-            'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-    end
-    movegui(h,'northwest');
-
-    % Set current Psi to be the initial state
-    currPsi = sparams.rho0';
-    
-    % Initialize the shuttling simulation figure
-    shtlEvolutionFig = initializeShuttlingFigure(sparams, squeeze(sparams.voltagePulse(jj,:,:)),...
-        currPsi, currPsi, xx, sparams.totalTime(jj));
-    
-    nn = 1; % Used to index fidelity array
-    ll = 0; % Used to know where in time domain to interpolate our potentials
-    kk = 0; % Used to index which interpolated potential we are on
-    yy = 0; % Used for stark shift indexing
-
-    % Convert from position to momentum space
-    currPsip = fftshift(fft(currPsi));
-    % Apply the KE operator for dt/2 
-    currPsip = K.*currPsip;
-    
-    for ii = 1:length(tTime)
-        kk = kk + 1;
-        
-        % Check for cancel button click
-        if getappdata(h,'canceling')
-            flag = 1;
-            break;
-        end
-
-        % Update waitbar every N frames
-        if mod(ii,sparams.updateWaitbar) == 0
-            waitbar(ii/length(tTime), h, sprintf('Current Time Index: %d/%d',ii,length(tTime)));
-        end
-
-        % Get an updated set of voltage pulse values 
-        if mod(ii,sparams.updateInterpPot) == 0 || ii == 1
-            kk = 1; % Reset counter
-            
-            startInterpInd = ll*sparams.updateInterpPot;
-            if ii == 1
-                startInterpInd = 1;
-            end
-            
-            % Increment counter for what batch of time indices in the pulse
-            % to interpolate
-            ll = ll + 1;
-            
-            endInterpInd = ll*sparams.updateInterpPot - 1;
-            if endInterpInd > length(tTime)
-                endInterpInd = length(tTime);
-            end
-            
-            gPulse = getInterpolatedPulseValues(sparams,...
-                tTime(startInterpInd:endInterpInd),sparams.vPulseGInterpolants);
-        end
-        
-        currPotential = sparams.P2DEGInterpolant(getInterpolantArgument(gPulse(:,kk),xx));
-        currPotential = squeezeFast(sparams.numOfGates,currPotential)';
-        V = exp(-1i*sparams.dt*currPotential/sparams.hbar);
-        
-        % Convert from momentum to position space
-        currPsix = ifft(fftshift(currPsip));
-        % Apply the PE operator for dt
-        currPsix = V.*currPsix;
-        % Convert from position to momentum space
-        currPsip = fftshift(fft(currPsix));
-        if ii ~= length(tTime)
-            % Apply the KE operator for dt
-            currPsip = K2.*currPsip;
-        else
-            % Apply the KE operator for dt/2
-            currPsip = K.*currPsip;
-            % Convert from momentum to position space
-            currPsi = ifft(fftshift(currPsip));
-        end
-        
-        % Calculate Stark shift
-        if any(sparams.starkShiftIndices(jj,:) == ii) && sparams.calculateStarkShift
-            yy = yy + 1;
-
-            curr2DPot = squeezeFast(sparams.numOfGates,...
-                sparams.P2DInterpolant(getInterpolantArgument(gPulse(:,kk),xx,zz)));
-            sparams = calculateStarkShift(sparams,curr2DPot,...
-                ifft(fftshift(currPsip)),xx,jj,yy);
-        end
-        
-        % Update figure 
-        if mod(ii,sparams.updateFigure) == 0
-            [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
-            
-            updateShuttlingFigure(sparams,shtlEvolutionFig,ifft(fftshift(currPsip)),...
-                currRho0,currPotential);
-        end
-        
-        % Update figure and save to gif
-        if any(sparams.saveFigureIndices(jj,:) == ii)
-            [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
-            
-            updateShuttlingFigure(sparams,shtlEvolutionFig,ifft(fftshift(currPsip)),...
-                currRho0,currPotential);
-            
-            saveGIFofEvolution(shtlEvolutionFig, sweepVec(jj), tTime(ii),...
-                [sparams.saveDir sparams.saveFolder currSimFolder]);
-        end
-        
-        % Calculate fidelity WRT current ground state
-        if any(sparams.fidelityIndices(jj,:) == ii)            
-            % Need to get the ground state of the current potential
-            [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPotential);
-            sparams.fidelity(jj,nn) = abs(getInnerProduct(xx,currRho0.',ifft(fftshift(currPsip))))^2;
-            nn = nn + 1;
-        end
-        
-    end
-            
-    % Close simulation figure
-    close(shtlEvolutionFig);
-    % Close waitbar
-    delete(h);
+    sparams = simulateCoherentShuttling(sparams, sweepVec, xx, zz, pp, jj, 'split-operator');
     
     % Save the simulation results so far (in case of a shut down mid
     % simulation)
@@ -238,8 +89,28 @@ for jj = 1:length(sweepVec)
     toc;
 end
 
+% profile off
+% profile viewer
+%*************************************************************************%
+%%
+
+profile on
+sparams.dt = 1E-15;
+sparams = simulateCoherentShuttling(sparams, sweepVec, xx, zz, pp, jj, 'split-operator');
 profile off
 profile viewer
+
+%%
+tic;
+tSpan = [0, sparams.totalTime(1)];
+psi0 = getCoherentInitialState(sparams,xx,squeeze(sparams.voltagePulse(1,:,:)));
+[solvedTimes, solvedPsis] = ode45(@(t,psi)schrodingerEqODE(t,psi,sparams,xx),tSpan,psi0);
+toc;
+fprintf(1,'Done\n');
+% close all force
+
+
+
 %%
 % Post simulation Analysis
 analyzeFidelity(sparams)

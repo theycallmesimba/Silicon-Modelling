@@ -2,14 +2,25 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     sparams, xx, adiabThreshVec, vBounds, findAdiabatic, effHamiltonianParams )
 %GETVOLTAGEPULSE Summary of this function goes here
 %   Detailed explanation goes here
-
+    
+    try
+        changedSecondSpinFlag = 0;
+        if sparams.includeSecondSpin
+            sparams.includeSecondSpin = 0;
+            changedSecondSpinFlag = 1;
+        end
+    catch
+        % Just ignore it because it means we aren't doing an effective
+        % shuttling simulation
+    end
+    
     % This function is to generate a pulsing sequence for
     % all the gates we have control over in our geometry.    
     nGatesUsedInPulse = length(sparams.gatesUsedInPulse);
     sparams.tcMax = zeros(nGatesUsedInPulse-1,1);
     
-    gMin = ones(1,sparams.numOfGates);
-    for ii = 1:sparams.numOfGates
+    gMin = ones(1,nGatesUsedInPulse);
+    for ii = 1:nGatesUsedInPulse
         gMin(1,ii) = vBounds(ii,1);
     end
     gMax = gMin;
@@ -22,7 +33,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
         gArg = gMin;
         gArg(sparams.gatesUsedInPulse(ii-1)) = gMax(sparams.gatesUsedInPulse(ii-1));
 
-        [gMax(sparams.gatesUsedInPulse(ii)), sparams.tcMax(ii-1)] = findResonantTunnelCoupling(sparams, xx, gArg, sparams.gatesUsedInPulse(ii), 0);
+        [gMax(sparams.gatesUsedInPulse(ii)), sparams.tcMax(ii-1)] = findResonantTunnelCoupling(sparams, xx, gArg, sparams.gatesUsedInPulse(ii), 1);
     end
     
     % Now we will construct the rough outline of the pulse with the main
@@ -74,7 +85,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     hold on;
     xlabel('Time [arb]','Interpreter','Latex');
     yyaxis left
-    for ii = 1:sparams.numOfGates
+    for ii = 1:length(sparams.gatesUsedInPulse)
         plot(qXPoints,gPulse(ii,:),'--o','Linewidth',1.5);
     end
     xlabel('Voltage [V]','Interpreter','Latex');
@@ -101,7 +112,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     % voltage thereby obtaining dV/dt at each point in the pulse.
     tic;
     optimalTime = zeros(1,length(qXPoints));
-    optimalPulseVoltage = zeros(sparams.numOfGates,length(qXPoints)+1); % +1 for the end points of the pulse
+    optimalPulseVoltage = zeros(length(sparams.gatesUsedInPulse),length(qXPoints)+1); % +1 for the end points of the pulse
     optimalPulseVoltage(optimalPulseVoltage == 0) = NaN;
     optimalPulseTime = zeros(1,length(qXPoints)+1); % +1 for the end points of the pulse
     optimalPulseTime(optimalPulseTime == 0) = NaN;
@@ -110,15 +121,18 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     optimalPulseTime(1) = 0;
     
     fig = figure;
+    set(gca,'TickLabelInterpreter','latex','Fontsize',14);
     hold on;
-    ylabel('Voltage [V]','Interpreter','Latex');
-    xlabel('Time [s]','Interpreter','Latex');
-    animatedLines = gobjects(1,sparams.numOfGates);
+    ylabel('Voltage [V]','Interpreter','Latex','Fontsize',22);
+    xlabel('Time [s]','Interpreter','Latex','Fontsize',22);
+    animatedLines = gobjects(1,length(sparams.gatesUsedInPulse));
     color = {'r','g','b','y','m'};
-    for ii = 1:sparams.numOfGates
+    for ii = 1:length(sparams.gatesUsedInPulse)
         animatedLines(ii) = animatedline(optimalPulseTime(1),optimalPulseVoltage(ii,1),...
-            'Linestyle','--','Marker','o','Linewidth',1.5,'Color',color{ii});
+            'Linestyle','--','Marker','o','Linewidth',1.5,'Color',color{ii},'DisplayName',sprintf('$V_%d$',ii));
     end
+    leg = legend;
+    leg.Interpreter = 'latex';
     drawnow;
     
     for ii = 1:length(qXPoints)        
@@ -146,7 +160,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
         optimalPulseVoltage(:,ii+1) = gPulse(:,ii) + dV./2;
         optimalPulseTime(ii+1) = optimalPulseTime(ii) + dt/2;
         
-        for jj = 1:sparams.numOfGates
+        for jj = 1:length(sparams.gatesUsedInPulse)
             addpoints(animatedLines(jj),optimalPulseTime(ii+1),optimalPulseVoltage(jj,ii+1));
         end
         drawnow;
@@ -154,13 +168,17 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     delete(fig);
     toc;
     
-    voltagePulse = zeros(sparams.numOfGates,sparams.nPulsePoints);
-    for ii = 1:sparams.numOfGates
+    voltagePulse = zeros(length(sparams.gatesUsedInPulse),sparams.nPulsePoints);
+    for ii = 1:length(sparams.gatesUsedInPulse)
         voltagePulse(ii,:) = interp1(optimalPulseTime,...
             optimalPulseVoltage(ii,:),linspace(0,max(optimalPulseTime),sparams.nPulsePoints));
     end
     
     optPulseTime = max(optimalPulseTime);
+    
+    if changedSecondSpinFlag
+        sparams.includeSecondSpin = 1;
+    end
 end
 
 function [time, adiabParams] = optimizeTimeForAdiabicity(sparams, xx, timeInd, numTimeInd,...
@@ -236,7 +254,7 @@ function [gPulse, xPoints] = formRoughPulseOutline(sparams, gMin, gMax)
     
     fig = figure;
     hold on;
-    for ii = 1:sparams.numOfGates
+    for ii = 1:nGatesUsedInPulse
         plot(xPoints,gPulse(ii,:),'--o','Linewidth',1.5);
     end
     drawnow;

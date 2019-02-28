@@ -5,15 +5,20 @@ function [sparams, detuningPulse, optPulseTime] = getDetuningPulseAdiabatic(...
 %don't want to define a detuning pulse in terms of voltage inputs.  This
 %code can only handle shuttling between 2 dots and not arbitrary dot chains
 %like the cousin function.
+    changedSecondSpinFlag = 0;
+    if sparams.includeSecondSpin
+        sparams.includeSecondSpin = 0;
+        changedSecondSpinFlag = 1;
+    end
 
     % Build the outline desired detuning pulse
-    ptsForPulse = 400;
+    ptsForPulse = sparams.nPulsePoints;
     % Left detuning pulse
-    tempL = linspace(detBounds(1,2),detBounds(1,1),ptsForPulse/2);
-    tempL = [tempL(1:end-1), linspace(detBounds(1,1),detBounds(1,1),ptsForPulse/2)];
+    tempL = linspace(detBounds(1,1),detBounds(1,1),ptsForPulse/2);
+    tempL = [tempL(1:end-1), linspace(detBounds(1,1),detBounds(1,2),ptsForPulse/2)];
     % Right detuning pulse
-    tempR = linspace(detBounds(2,1),detBounds(2,1),ptsForPulse/2);
-    tempR = [tempR(1:end-1), linspace(detBounds(2,1),detBounds(2,2),ptsForPulse/2)];
+    tempR = linspace(detBounds(2,2),detBounds(2,1),ptsForPulse/2);
+    tempR = [tempR(1:end-1), linspace(detBounds(2,1),detBounds(2,1),ptsForPulse/2)];
     
     detPulse = [tempL; tempR];
     
@@ -62,8 +67,9 @@ function [sparams, detuningPulse, optPulseTime] = getDetuningPulseAdiabatic(...
     
     fig = figure;
     hold on;
-    ylabel('Detuning [eV]','Interpreter','Latex');
-    xlabel('Time [s]','Interpreter','Latex');
+    set(gca,'Fontsize',14,'TickLabelInterpreter','latex');
+    ylabel('Detuning [eV]','Interpreter','Latex','Fontsize',20);
+    xlabel('Time [s]','Interpreter','Latex','Fontsize',20);
     animatedLines = gobjects(1,sparams.numOfGates);
     color = {'r','g','b','y','m'};
     for ii = 1:2
@@ -112,6 +118,10 @@ function [sparams, detuningPulse, optPulseTime] = getDetuningPulseAdiabatic(...
     end
     
     optPulseTime = max(optimalPulseTime);
+    
+    if changedSecondSpinFlag
+        sparams.includeSecondSpin = 1;
+    end
 end
 
 function [time, adiabParams] = optimizeTimeForAdiabicity(sparams, timeInd, numTimeInd,...
@@ -121,7 +131,7 @@ function [time, adiabParams] = optimizeTimeForAdiabicity(sparams, timeInd, numTi
     options = optimset('TolX',10^floor(log10(thresholdVector(timeInd))));
 
     if strcmp(sparams.adiabaticPulseType,'effective')
-        [time, ~] = fminbnd(@(qTimePower) optimizeAdiabaticParameterEffective(qTimePower, 1),...
+        [time, ~] = fminbnd(@(qTimePower) optimizeAdiabaticParameterEffective(qTimePower, sparams.nnIndices),...
             sparams.timePowerBounds(1), sparams.timePowerBounds(2), options);
     end
 

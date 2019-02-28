@@ -45,30 +45,18 @@ function [adiabParamNNTotal, adiabParamInd] = calculateAdiabaticParameterEffecti
     [~, ind] = sort(diag(ensm2h));
     ketsm2h = ketsm2h(:,ind);
     
-    % Now, the SE equation solver uses eigs which can output a random +/-1
-    % global phase on the wavefunction output depending on what random seed
-    % vector it uses to solve the eigenvalue problem.  We need to make sure
-    % our phases are consistent across all dts we calculate otherwise we'll
-    % get big jumps in the derivative.  We can check the phase by taking
-    % the inner product which (if dt is small) should be ~1.  So if it's <0
-    % then we know the phase is off.
+    % Now, the SE equation solver uses eigs which can output a random
+    % global phase on the eigenvector outputs.  This will cause issues when
+    % we try to find the derivative as they need the same global phase in
+    % order to accurately add them together.  So we normalize them all to
+    % the same phase by making the first element of every vector real and
+    % positive
+    ketsp2h = setKetSameGlobalPhase(ketsp2h);
+    ketsph = setKetSameGlobalPhase(ketsph);
+    ketsmh = setKetSameGlobalPhase(ketsmh);
+    ketsm2h = setKetSameGlobalPhase(ketsm2h);
+    
     [~,nBasis] = size(currHam);
-    for ii = 1:nBasis
-        if kets(:,ii)'*ketsp2h(:,ii) < 0
-            ketsp2h(:,ii) = -ketsp2h(:,ii);
-        end
-        if kets(:,ii)'*ketsph(:,ii) < 0
-            ketsph(:,ii) = -ketsph(:,ii);
-        end
-        if kets(:,ii)'*ketsmh(:,ii) < 0
-            ketsmh(:,ii) = -ketsmh(:,ii);
-        end
-        if kets(:,ii)'*ketsm2h(:,ii) < 0
-            ketsm2h(:,ii) = -ketsm2h(:,ii);
-        end
-    end
-    
-    
     % Now evaluate the adiabatic parameter by summing over all excited
     % states
     adiabParamNNTotal = 0;
@@ -76,7 +64,8 @@ function [adiabParamNNTotal, adiabParamInd] = calculateAdiabaticParameterEffecti
     adiabParamInd = struct([]);
     % <jj|\dot{ii}> adiabatic parameter
     for ii = 1:nBasis
-        % Get |\dot{ii}>
+        % Get |\dot{ii}> through a 5 point stencil estimation of the
+        % derivative
         iiKetDeriv = (-ketsp2h(:,ii) + 8*ketsph(:,ii) - 8*ketsmh(:,ii) + ketsm2h(:,ii))/(12*h);
         for jj = 1:nBasis
             % Ignore <ii|\dot{ii}> terms
@@ -88,9 +77,14 @@ function [adiabParamNNTotal, adiabParamInd] = calculateAdiabaticParameterEffecti
             adiabParamInd(vv).nn = ii;
             adiabParamInd(vv).adiabaticParameter = sparams.hbar*abs(kets(:,jj)'*iiKetDeriv/(ens(ii,ii) - ens(jj,jj)));
             
-            if ii == nn
+            if any(ii == nn)
                 adiabParamNNTotal = adiabParamNNTotal + adiabParamInd(vv).adiabaticParameter;
             end
         end
     end
+    
+    % Now, we want to make sure that a certain adiabatic parameter
+    % corresponds to a certain fidelity..  So we will average the adiabatic
+    % parameter to how many nn indices we swept over.
+    adiabParamNNTotal = adiabParamNNTotal/length(nn);
 end

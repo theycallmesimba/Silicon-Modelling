@@ -1,8 +1,8 @@
 function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gateIndSweep, plotResult)
     % We want to find the point where the tunnel coupling is maximized
     % between two gates.  This is done by finding the voltage where the
-    % gate being swept has maximum peak heights in both dots.
-    
+    % gate being swept has equal wave function peak heights in both dots.
+        
     % Need to find a good guess for where to look for the max tunnel
     % coupling
     % Just in case it's not.. Let's make our swept gate index be the same
@@ -10,8 +10,7 @@ function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gate
     vVecpt1 = vVec;
     vVecpt1(gateIndSweep) = max(vVec);
     vVecCellpt1 = [num2cell(vVecpt1),xx];
-    currPot = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCellpt1));
-    
+    currPot = squeezeFast(length(sparams.interpableGates),sparams.P2DEGInterpolant(vVecCellpt1));
     [epsLpt, epsRpt] = getDetuning(sparams, xx, currPot.');
     
     % Now change the swept index by +/-.1 mV and see how detuning changes
@@ -19,13 +18,13 @@ function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gate
     vVecpt2 = vVec;
     vVecpt2(gateIndSweep) = max(vVec) - h;
     vVecCellpt2 = [num2cell(vVecpt2),xx];
-    currPot = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCellpt2));
+    currPot = squeezeFast(length(sparams.interpableGates),sparams.P2DEGInterpolant(vVecCellpt2));
     [epsLmh, epsRmh] = getDetuning(sparams, xx, currPot.');
     
     vVecpt3 = vVec;
     vVecpt3(gateIndSweep) = max(vVec) + h;
     vVecCellpt3 = [num2cell(vVecpt3),xx];
-    currPot = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCellpt3));
+    currPot = squeezeFast(length(sparams.interpableGates),sparams.P2DEGInterpolant(vVecCellpt3));
     [epsLph, epsRph] = getDetuning(sparams, xx, currPot.');
 
     % Now find which voltage makes them 0 detuning
@@ -44,7 +43,7 @@ function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gate
     % Convert vVec from a list to a cell array and add on xx
     vVecCell = [num2cell(vVec),xx];
     
-    deps = 5E-6*sparams.ee; % Have the searched voltage range be 10 ueV of detuning
+    deps = 1E-4*sparams.ee; % Have the searched voltage range be 10 ueV of detuning
     dVRange = abs(deps/deR_dVi);
     vRangePow = floor(log10(dVRange));
     options = optimset('TolX',10^(vRangePow - 2));
@@ -54,7 +53,7 @@ function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gate
     function diff = findPeakDifference(currV)
         vVecCell{gateIndSweep} = currV;
         
-        currPot = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCell));
+        currPot = squeezeFast(length(sparams.interpableGates),sparams.P2DEGInterpolant(vVecCell));
         [currRho0, ~] = solve1DSingleElectronSE(sparams,1,xx,currPot);
         currRho0NSq = abs(currRho0).^2/norm(abs(currRho0).^2);
         
@@ -69,7 +68,7 @@ function [vGTargMax, tcMax] = findResonantTunnelCoupling(sparams, xx, vVec, gate
     end
     
     vVecCell{gateIndSweep} = vGTargMax;
-    currPotential = squeezeFast(sparams.numOfGates,sparams.P2DEGInterpolant(vVecCell));
+    currPotential = squeezeFast(length(sparams.interpableGates),sparams.P2DEGInterpolant(vVecCell));
     [currRhos, ens] = solve1DSingleElectronSE(sparams,2,xx,currPotential);
 
     currRho0NormSquared = abs(currRhos(:,1)').^2/norm(abs(currRhos(:,1)').^2);

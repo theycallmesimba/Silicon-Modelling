@@ -4,7 +4,7 @@ function fig = plotPotentialAndGroundWF( sparams, gateVoltages, xx )
 
     fig = figure;
     tempPot = sparams.P2DEGInterpolant([num2cell(gateVoltages),mat2cell(xx,1,length(xx))]);
-    tempPot = squeezeFast(sparams.numOfGates,tempPot);
+    tempPot = squeezeFast(length(sparams.gatesUsedInPulse),tempPot);
     
     [tempWF, ~] = solve1DSingleElectronSE(sparams,1,xx,tempPot); 
     
