@@ -53,5 +53,44 @@ Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams)
 
 H = updateEffectiveHamiltonianDetuning(Heff,deltaL,deltaR)
 
+%%
+load('orbVSpTime-100tc.mat');
+orbVSpTime = griddedInterpolant({fliplr(orbitalSpacing)},fliplr(pulseTimeResults));
+figure;
+plot(orbitalSpacing,pulseTimeResults);
+
+sparams.potDir = 'C:\Users\bbuonaco\Documents\GitHub\Simulated Potentials\orbitalSpacingOutputs - Correct\';
+dotSizes = 30:10:650;
+gapSize = 30E-9;
+orbitalSpacing = zeros(1,length(dotSizes));
+
+for ii = 1:length(dotSizes)
+    currFolderFile = sprintf('QM_ON_GWIDTHX_%d\\output\\Quantum\\wf_energy_spectrum_quantum_region_X3_0000.dat',dotSizes(ii));
+    fid = fopen([sparams.potDir currFolderFile],'r');
+    tline = fgetl(fid);
+    tline = fgetl(fid);
+    energy0 = str2num(tline);
+    energy0 = energy0(2);
+    tline = fgetl(fid);
+    energy1 = str2num(tline);
+    energy1 = energy1(2);
+    fclose(fid);
+    
+    orbitalSpacing(ii) = (energy1 - energy0)*sparams.ee;
+end
+
+orbitalSpacing = smooth(orbitalSpacing)';
+pTimes = orbVSpTime(orbitalSpacing);
+figure;
+plot(orbitalSpacing,pTimes);
+
+fraction = linspace(1,2,length(dotSizes));
+for ii = 1:length(dotSizes)
+    dotSizes(ii) = dotSizes(ii)/fraction(ii);
+end
+figure;
+velocity = (dotSizes*1E-9 + gapSize)./pTimes;
+plot(dotSizes,velocity);
+
 
 

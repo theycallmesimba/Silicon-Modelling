@@ -60,7 +60,6 @@ end
 % approach
 [sparams, sweepVec, ~, ~] = initializeShuttlingSimulation(sparams, pp);
 
-% sweepVec = [0.07,0.07;0.02,0.02];
 for jj = 1:length(sweepVec)
     if strcmp(sparams.sweptParameter,'time')
         fprintf(1,'Running time sweep shuttling simulation for %.3E (%d/%d)...\n',sweepVec(jj),jj,length(sweepVec));
@@ -92,29 +91,6 @@ end
 % profile off
 % profile viewer
 %*************************************************************************%
-%%
-
-profile on
-sparams.dt = 1E-15;
-sparams = simulateCoherentShuttling(sparams, sweepVec, xx, zz, pp, jj, 'split-operator');
-profile off
-profile viewer
-
-%%
-tic;
-tSpan = [0, sparams.totalTime(1)];
-psi0 = getCoherentInitialState(sparams,xx,squeeze(sparams.voltagePulse(1,:,:)));
-[solvedTimes, solvedPsis] = ode45(@(t,psi)schrodingerEqODE(t,psi,sparams,xx),tSpan,psi0);
-toc;
-fprintf(1,'Done\n');
-% close all force
-
-
-
-%%
-% Post simulation Analysis
-analyzeFidelity(sparams)
-analyzeStarkShift(sparams)
 %% Post simulation Analysis
 
 figure;

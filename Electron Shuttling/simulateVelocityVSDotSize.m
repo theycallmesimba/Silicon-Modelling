@@ -74,16 +74,18 @@ sparams.includeExcitedOrbital = 1;
 sparams.adiabaticPulseType = 'effective';
 
 adiabThresh = [0.005,0.005];
-dBounds = [0, 4500E-6;0, 4500E-6]*sparams.ee;
+% dBounds = [0, 4500E-6;0, 4500E-6]*sparams.ee;
+dBounds = [0, 5000E-6;0, 5000E-6]*sparams.ee;
 pulseTimeResults = zeros(length(tc),length(orbitalSpacing));
 fidelity = zeros(length(tc),length(orbitalSpacing));
 sparams.nPulsePoints = 500;
 sparams.dt = 5E-14;
-
+nn = 0; % Iteration tracker
 for jj = 1:length(tc)
     for ii = 1:length(orbitalSpacing)
+        nn = nn + 1;
         fprintf(1,'(%d/%d) Orbital energy = %.3E [eV], tc = %0.3E [eV]\n',...
-            ii,length(orbitalSpacing)*length(tc),orbitalSpacing(ii)/sparams.ee,tc(jj)/sparams.ee);
+            nn,length(orbitalSpacing)*length(tc),orbitalSpacing(ii)/sparams.ee,tc(jj)/sparams.ee);
 
         t1 = tc(jj);
         t2 = tc(jj);

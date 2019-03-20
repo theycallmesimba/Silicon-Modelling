@@ -15,9 +15,8 @@ function Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams)
         HdotL = [epsL, 0; 0, (epsL + EL)];
         HdotR = [epsR, 0; 0, (epsR + ER)];
         
-%         Heff = kron([1 0;0 0],HdotL) + kron([0 1;0 0],HtcMat') + kron([0 0;1 0],HtcMat) + kron([0 0;0 1],HdotR);
-        Heff = kron(HdotL,[1 0;0 0]) + kron(HtcMat',[0 1;0 0]) + kron(HtcMat,[0 0;1 0]) + kron(HdotR,[0 0;0 1]);
-        return
+        Heff = kron([1 0;0 0],HdotL) + kron([0 1;0 0],HtcMat') + kron([0 0;1 0],HtcMat) + kron([0 0;0 1],HdotR);
+        return;
     end
     
     if sparams.includeOrbital

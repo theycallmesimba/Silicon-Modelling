@@ -11,17 +11,29 @@ function [sparams, detuningPulse, optPulseTime] = getDetuningPulseAdiabatic(...
         changedSecondSpinFlag = 1;
     end
 
-    % Build the outline desired detuning pulse
-    ptsForPulse = sparams.nPulsePoints;
-    % Left detuning pulse
-    tempL = linspace(detBounds(1,1),detBounds(1,1),ptsForPulse/2);
-    tempL = [tempL(1:end-1), linspace(detBounds(1,1),detBounds(1,2),ptsForPulse/2)];
-    % Right detuning pulse
-    tempR = linspace(detBounds(2,2),detBounds(2,1),ptsForPulse/2);
-    tempR = [tempR(1:end-1), linspace(detBounds(2,1),detBounds(2,1),ptsForPulse/2)];
-    
+    % Linear dV spacing for pulse points
+%     tempL = linspace(detBounds(1,1),detBounds(1,1),sparams.nPulsePoints/2);
+%     tempL = [tempL linspace(detBounds(1,1),detBounds(1,2),sparams.nPulsePoints/2)];
+%     tempR = linspace(detBounds(2,2),detBounds(2,1),sparams.nPulsePoints/2);
+%     tempR = [tempR linspace(detBounds(2,1),detBounds(2,1),sparams.nPulsePoints/2)];
+%     detPulse = [tempL; tempR];
+  
+    % Logarithmic dV spacing for pulse points
+    highestVResolution = log10(10^-7*sparams.ee);
+    tempL = linspace(detBounds(1,1),detBounds(1,1),sparams.nPulsePoints/2);
+    if detBounds(1,1) == 0
+        tempL = [tempL detBounds(1,1) logspace(highestVResolution,log10(detBounds(1,2)),sparams.nPulsePoints/2-1)];
+    else
+        tempL = [tempL logspace(log10(detBounds(1,1)),log10(detBounds(1,2)),sparams.nPulsePoints/2)];
+    end
+    if detBounds(2,1) == 0
+        tempR = [logspace(log10(detBounds(2,2)),highestVResolution,sparams.nPulsePoints/2-1) detBounds(2,1)];
+    else
+        tempR = linspace(detBounds(2,2),detBounds(2,1),sparams.nPulsePoints/2);
+    end
+    tempR = [tempR linspace(detBounds(2,1),detBounds(2,1),sparams.nPulsePoints/2)];
     detPulse = [tempL; tempR];
-    
+
     [rows,cols] = size(detPulse);
     qXPoints = linspace(0,1,cols);
     adiabQPoints = ones(1,cols)*adiabThreshVec(1);
@@ -140,7 +152,7 @@ function [time, adiabParams] = optimizeTimeForAdiabicity(sparams, timeInd, numTi
         % interested in
         tVec = linspace(0,10^qTimePower,numTimeInd);
         cTime = tVec(timeInd);
-
+        
         % Make a set of detuning interpolant objects based on the current
         % time vector
         detInterps = makeDetuningInterpolants(tVec, detPulse(1,:), detPulse(2,:));

@@ -27,17 +27,34 @@ end
 % orbitalInterpolant = griddedInterpolant({dotSizes},orbitalSpacing,'spline');
 % dotSizes = linspace(min(dotSizes),max(dotSizes),length(dotSizes));
 % orbitalSpacing = orbitalInterpolant({dotSizes});
-
+%%
 figure;
 hold on;
-% plot(dotSizes,orbitalSpacing/sparams.ee,'Linewidth',2);
-plot(dotSizes,orbitalSpacing/sparams.ee,'Linewidth',1.5);
+plot(dotSizes,orbitalSpacing/sparams.ee,'Linewidth',2);
+
+orbSpacingSmooth1 = smooth(orbitalSpacing);
+plot(dotSizes,orbSpacingSmooth1/sparams.ee,'Linewidth',2);
+
+orbSpacingSmooth2 = smooth(orbitalSpacing,0.1,'loess');
+plot(dotSizes,orbSpacingSmooth1/sparams.ee,'Linewidth',2);
+
+% orbSpacingSorted = fliplr(sort(orbitalSpacing));
+% plot(dotSizes,orbSpacingSorted/sparams.ee,'Linewidth',2);
+% xlim([150,650]);
+% 
+% 
+% fitObj = fit(dotSizes',orbitalSpacing'/sparams.ee,'smoothingspline');
+% figure;
+% plot(fitObj,dotSizes,orbitalSpacing/sparams.ee);
+% xlim([150,650]);
 %%
-tc = linspace(10,100,6)*1E-6*sparams.ee;
+% tc = linspace(10,100,6)*1E-6*sparams.ee;
 % tc = [10,100]*1E-6*sparams.ee;
-% tc = 100*1E-6*sparams.ee;
-orbitalSpacing = logspace(-2.5,-5,200)*sparams.ee;
-% orbitalSpacing = [10^-3,10^-5]*sparams.ee;
+tc = 100*1E-6*sparams.ee;
+% tc = (10:10:100)*1E-6*sparams.ee;
+orbitalSpacing = logspace(-2.5,-5,50)*sparams.ee;
+% orbitalSpacing = [4.84289E-22,6.79833E-24];
+% orbitalSpacing = [10^-2.5,10^-5]*sparams.ee;
 % orbitalSpacing = orbitalSpacing(end);
 
 % Get an adiabatic voltage pulse based on the voltage
@@ -52,14 +69,14 @@ sparams.adiabaticPulseType = 'effective';
 adiabThresh = [0.005,0.005];
 pulseTimeResults = zeros(length(tc),length(orbitalSpacing));
 fidelity = zeros(length(tc),length(orbitalSpacing));
-sparams.nPulsePoints = 600;
+sparams.nPulsePoints = 750;
 sparams.dt = 5E-14;
 
-% tc = 1E-4*sparams.ee;
-% orbitalSpacing = 1E-5*sparams.ee;
+% orbitalSpacing = smooth(orbitalSpacing);
+
 nn = 0; % Iteration tracker
 for jj = 1:length(tc)
-    dBounds = [0, 500*tc(jj);0, 500*tc(jj)];
+    dBounds = [0, 750*tc(jj);0, 750*tc(jj)];
     for ii = 1:length(orbitalSpacing)
         nn = nn + 1;
         fprintf(1,'(%d/%d) Orbital energy = %.3E [eV], tc = %0.3E [eV]\n',...
@@ -84,3 +101,4 @@ for jj = 1:length(tc)
     %     fidelity(ii) = fidTemp(end);
     end
 end
+
