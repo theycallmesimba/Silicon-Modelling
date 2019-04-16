@@ -107,7 +107,7 @@ end
 %     end
 % end
 
-[~,Hactual] = solve2DSingleElectronSE( sparams, XX, YY, VV, 10);
+[~,Hactual] = solve2DSingleElectronSE(sparams, XX, YY, VV, 10);
 
 HLOHOA = sparams.acoeffs*HLOHO*sparams.acoeffs';
 [~,perm] = sort(diag(HLOHOA));
@@ -130,6 +130,24 @@ sparams = solveCMEsSameOrbital(sparams);
 % Save because that took a very long time
 % save('exchangeTest1.mat','sparams','V','X','Y');
 toc;
+%%
+% Now we need to build our fermionic creation and annhilation operators
+% sparams = createFermionicLadderOperators(sparams);
+
+% Get the basis states that you want to use based on number of electrons in
+% the system
+% TODO: Extend to allow flexibility in spin subspace as well.
+% sparams.numElectrons = 2;
+% sparams.subspaceVectorIndices = getSubspaceOfFullHamiltonian(sparams);
+
+% Construct the second quantization Hamiltonian
+sparams.numElectrons = 3;
+sparams.nSingleOrbitals = 3;
+sparams.whichSz = 'all';
+sparams = buildSecondQuantizationHam(sparams,[1,2]);
+
+
+
 
 
 
