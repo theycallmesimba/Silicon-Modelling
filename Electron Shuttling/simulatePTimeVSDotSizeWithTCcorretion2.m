@@ -2,7 +2,6 @@ clear;
 shuttleParameterFile;
 sparams.potDir = 'C:\Users\bbuonaco\Documents\GitHub\Simulated Potentials\orbitalSpacingOutputs - Correct\';
 dotSizesOrb = 30:10:150;
-gapSize = 30E-9;
 
 % First get orbital spacing versus dot size
 orbitalSpacing = zeros(1,length(dotSizesOrb));
@@ -22,15 +21,17 @@ for ii = 1:length(dotSizesOrb)
 end
 orbitalSpacing = smooth(orbitalSpacing);
 
-figure;
-plot(dotSizesOrb,orbitalSpacing/sparams.ee);
+% figure;
+% plot(dotSizesOrb,orbitalSpacing/sparams.ee);
 
 % Now tc versus dot size
-sparams.potDir = 'C:\Users\bbuonaco\Documents\GitHub\Simulated Potentials\tunnnelCouplingOutputs - Correct\';
+sparams.potDir = 'C:\Users\bbuonaco\Documents\GitHub\Simulated Potentials\tcOutputsVaryingDotandGapSize\';
 dotSizesTc = 30:10:150;
-tc = zeros(1,length(dotSizesTc));
+gapSizes = 5:5:40;
+tc = zeros(length(gapSizes),length(dotSizesTc));
+for jj = 1:length(gapSizes)
 for ii = 1:length(dotSizesTc)
-    currFolderFile = sprintf('QM_ON_GWIDTHX_%d\\output\\Quantum\\wf_energy_spectrum_quantum_region_X3_0000.dat',dotSizesTc(ii));
+    currFolderFile = sprintf('QM_ON_GWIDTHX_%d_GAP_%d\\output\\Quantum\\wf_energy_spectrum_quantum_region_X3_0000.dat',dotSizesTc(ii),gapSizes(jj));
     fid = fopen([sparams.potDir currFolderFile],'r');
     tline = fgetl(fid);
     tline = fgetl(fid);
@@ -41,12 +42,33 @@ for ii = 1:length(dotSizesTc)
     energy1 = energy1(2);
     fclose(fid);
     
-    tc(ii) = (energy1 - energy0)/2*sparams.ee;
+    tempTc = (energy1 - energy0)/2*sparams.ee;
+    % Cutoff results with too large of a calculated tc since those are most
+    % likely not well defined tcs
+    if tempTc >= 2E-4*sparams.ee
+        tempTc = NaN;
+    end
+    tc(jj,ii) = tempTc;
 end
-% tc = smooth(tc);
+end
 
-figure;
-plot(dotSizesTc,tc/sparams.ee);
+figure('Color','white');
+[XX,YY] = meshgrid(dotSizesTc,gapSizes);
+h = surf(XX,YY,tc/sparams.ee);
+set(h,'EdgeColor','none');
+view(2);
+% set(gca,'colorScale','log','Fontsize',16,'TickLabelInterpreter','latex');
+set(gca,'colorScale','log','Fontsize',18,'TickLabelInterpreter','latex');
+xlabel('$D$ [nm]','FontSize',20,'Interpreter','latex');
+ylabel('$G$ [nm]','FontSize',20,'Interpreter','latex');
+% shading(gca,'interp');
+cb = colorbar;
+cb.Ticks = [1E-7,1E-6,1E-5,1E-4];
+cb.TickLabelInterpreter = 'latex';
+ylabel(cb,'$t_c$ [eV]','FontSize',20,'Interpreter','latex');
+pos = get(gca,'Position');
+pos(3) = 0.98*pos(3);
+set(gca,'Position',pos);
 %%
 % Get an adiabatic voltage pulse based on the voltage
 % points given earlier and using the effective

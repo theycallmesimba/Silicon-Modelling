@@ -121,7 +121,7 @@ tc = 75E-6*sparams.ee;
 EL = 0;
 ER = 0;
 %%
-% RUNNING
+% COMPELTE
 saveName = 'Ez-40-tc-75-SO-2.0-VLvsdPhi.mat';
 dPhi =  linspace(0,pi,50);
 valleyL = linspace(25,250,50)*1E-6*sparams.ee;
@@ -130,6 +130,18 @@ spinOrbit = 2.0*1E-6*sparams.ee;
 Ex = [0]*1E-6*sparams.ee;
 Ez = [40]*1E-6*sparams.ee;
 tc = 75E-6*sparams.ee;
+EL = 0;
+ER = 0;
+%%
+% COMPLETE
+saveName = 'highValleySimulation.mat';
+dPhi = linspace(0,pi,150);
+valleyL = 500*1E-6*sparams.ee;
+valleyR = [150,500]*1E-6*sparams.ee;
+spinOrbit = 2.0*1E-6*sparams.ee;
+Ex = 0;
+Ez = 40*1E-6*sparams.ee;
+tc = 75*1E-6*sparams.ee;
 EL = 0;
 ER = 0;
 %%

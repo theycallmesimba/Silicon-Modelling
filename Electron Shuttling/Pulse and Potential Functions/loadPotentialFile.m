@@ -1,4 +1,5 @@
-function [xdata, zdata, pot2Ddata] = loadPotentialFile(sparams, currFName, interpFlag, fileType, interpDirs, trimFlag)
+function [xdata, zdata, pot2Ddata] = loadPotentialFile(sparams, currFName,...
+    interpFlag, fileType, interpDirs, trimFlag, trimRange)
 %LOADPOTENTIALFILE Summary of this function goes here
 %   Moved this to a separate file because sometimes I need to load a single
 %   file and don't want to do a loop over loading a bunch of them
@@ -6,6 +7,8 @@ function [xdata, zdata, pot2Ddata] = loadPotentialFile(sparams, currFName, inter
     if nargin < 3
         fileType = 'csv';
         interpDirs = 'xz';
+    elseif nargin < 7
+        trimRange = [-110,110];
     end
 
     if strcmp(fileType,'csv')
@@ -17,8 +20,8 @@ function [xdata, zdata, pot2Ddata] = loadPotentialFile(sparams, currFName, inter
     if interpFlag
         if trimFlag
             % Trim the x axis a little bit
-            xCutOffL = getClosestArrayIndex(-110,xdata);
-            xCutOffR = getClosestArrayIndex(110,xdata);
+            xCutOffL = getClosestArrayIndex(trimRange(1),xdata);
+            xCutOffR = getClosestArrayIndex(trimRange(2),xdata);
             xdata = xdata(xCutOffL:xCutOffR);
             pot2Ddata = pot2Ddata(:,xCutOffL:xCutOffR);
         end
