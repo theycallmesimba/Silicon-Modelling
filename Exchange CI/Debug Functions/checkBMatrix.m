@@ -19,17 +19,22 @@ function checkBMatrix(sparams,XX,YY)
         view(2);
         
         subplot(1,2,2);
-        s = surf(XX,YY,sparams.loeLOHOs(jj).wavefunctionMG);
+%         s = surf(XX,YY,sparams.loeLOHOs(jj).wavefunctionMG);
+        s = surf(XX,YY,sparams.LOHOs(jj).wavefunctionMG);
         set(s,'edgecolor','none');
         title(sprintf('LoeHO %d',jj));
         view(2);
         colormap(hot);
         drawnow;
 
-        fprintf(1,'State %03d norms - b transformed: %0.4f, LoeHO states: %0.4f \n',...
+%         fprintf(1,'State %03d norms - b transformed: %0.4f, LoeHO states: %0.4f \n',...
+%             jj, getInnerProduct2D(currWF,currWF,XX,YY),...
+%             getInnerProduct2D(sparams.loeLOHOs(jj).wavefunctionMG,...
+%             sparams.loeLOHOs(jj).wavefunctionMG,XX,YY));
+        fprintf(1,'State %03d norms - b transformed: %0.4f, LOHO states: %0.4f \n',...
             jj, getInnerProduct2D(currWF,currWF,XX,YY),...
-            getInnerProduct2D(sparams.loeLOHOs(jj).wavefunctionMG,...
-            sparams.loeLOHOs(jj).wavefunctionMG,XX,YY));
+            getInnerProduct2D(sparams.LOHOs(jj).wavefunctionMG,...
+            sparams.LOHOs(jj).wavefunctionMG,XX,YY));
     end
 end
 

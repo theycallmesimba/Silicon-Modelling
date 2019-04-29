@@ -19,8 +19,11 @@ function [sparams, HLOHO] = solveLinearCombinationHOs( sparams, X, Y, V )
     end
 
     % Solve the regular eigenvalue equation
-    [sparams.acoeffs,en] = eig(HLOHO,SLOHO);
-
+    [vecs,en] = eig(HLOHO,SLOHO);
+    [~,ind] = sort(diag(en));
+    en = en(ind,ind);
+    sparams.acoeffs = vecs(:,ind);
+    
     % Transpose matrix to match indexing convention in code
     sparams.acoeffs = sparams.acoeffs.';
     

@@ -30,7 +30,7 @@ function sparams = buildSecondQuantizationHam(sparams, spinSubSystems)
     % Now we want to truncate the spin subspace if desired
     % First calculate the possible spin subspaces
     possibleSz = -sparams.numElectrons*0.5:1:sparams.numElectrons*0.5;
-    if isstring(spinSubSystems)
+    if ischar(spinSubSystems)
         if strcmpi(spinSubSystems,'all')
             % Do nothing as we want the whole spin subspace
         else
@@ -92,16 +92,23 @@ function sparams = buildSecondQuantizationHam(sparams, spinSubSystems)
         end
     end
     
-%     T = sparse(zeros(nSOstates^2));
-%     Hc = sparse(zeros(nSOstates^2));
+    T = sparse(zeros(nStates));
+    Hc = sparse(zeros(nStates));
     % The second quantization hamiltonian has two terms: T + H_C.  T
     % describes all the single particle energies in the hamiltonian while
     % H_C describes all the exchange interactions.
     
-%     % Let's first build the single-particle energy operator
-%     for ii = 1:nStates
-%         for jj = 1:nStates
-%         end
-%     end
+    % Let's first build the single-particle energy operator as it's the
+    % easiest.
+    % All elements lie only on the diagonal and each element is simply the
+    % sum of single electron energies comprising the state
+    % sum_j(\eps_j c_j^\dag c_j)
+    % First get all of the energies
+    singleElectronOrbitalEnergies = [sparams.LCHOs.energy];
+    for ii = 1:nStates
+        currElecOrbitals = sparams.basisVectors(ii,1:sparams.numElectrons);
+        singleElectronOrbitalEnergies(currElecOrbitals)
+        T(ii,ii) = sum(singleElectronOrbitalEnergies(currElecOrbitals));
+    end
 end
 

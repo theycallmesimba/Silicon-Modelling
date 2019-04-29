@@ -32,7 +32,7 @@ fprintf(1,'Finding 2D localized harmonic orbitals...\n');
 sparams = solveFor2DLocalizedHOs(sparams,XX,YY);
 
 % Show the 2D LOHOs and check that they are properly normalized
-debugHere = 1;
+debugHere = 0;
 if sparams.verbose && debugHere
     checkLOHOStates(sparams,XX,YY);
 end
@@ -50,7 +50,7 @@ fprintf(1,'Performing Loewdin Orthonormalization...\n');
 sparams = solveLoewdinOrthonormalization(sparams, XX, YY);
 
 % Check orthonormality of the states
-debugHere = 1;
+debugHere = 0;
 if sparams.verbose && debugHere
     checkLoeLOHOStates(sparams,XX,YY)
 end
@@ -68,16 +68,17 @@ end
 sparams = createOriginHOs(sparams,XX,YY);
 
 % Show the 2D nonShiftLOHOs and check that they are properly normalized
-debugHere = 1;
+debugHere = 0;
 if sparams.verbose && debugHere
     checkOriginHOStates(sparams,XX,YY);
 end
 %%
 
 sparams = solveLoeToOriginCoeffs(sparams,XX,YY);
+% sparams = solveLOHOToOriginCoeffs(sparams,XX,YY);
 
 % Check that the bcoeffs are correct by trying to build the Loe states
-debugHere = 1;
+debugHere = 0;
 if sparams.verbose && debugHere
     checkBMatrix(sparams,XX,YY);
 end
@@ -143,8 +144,12 @@ toc;
 % Construct the second quantization Hamiltonian
 sparams.numElectrons = 3;
 sparams.nSingleOrbitals = 3;
-sparams.whichSz = 'all';
 sparams = buildSecondQuantizationHam(sparams,[1,2]);
+
+
+
+
+
 
 
 

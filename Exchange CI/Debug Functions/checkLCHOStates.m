@@ -1,6 +1,7 @@
 function checkLCHOStates(sparams, XX, YY)
 %CHECKLCHOSTATES Summary of this function goes here
 %   Detailed explanation goes here
+
     for ii = 1:sparams.nSingleOrbitals     
         currWF = sparams.LCHOs(ii).wavefunctionMG;
 
