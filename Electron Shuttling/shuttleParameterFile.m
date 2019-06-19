@@ -83,4 +83,4 @@ for ii = 1:length(sparams.interpableGates)
 end
 sparams.saveDir = 'C:/Users/bbuonaco/Documents/Github/Simulation Results/Electron Shuttling/';
 
-clearvars ii
+clearvars ii1
