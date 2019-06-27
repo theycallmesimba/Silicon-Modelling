@@ -6,7 +6,7 @@ function thetaIntegrals = getThetaIntegrals(sparams)
     % non-zero for even power of aa  
     % Worst case for a on cos term is that na,nb,ng,nd = nNonShiftHOs with p's = 0
     % Likewise for b and m's.
-    thetaMaxIndex = 4*(sparams.nNonShiftedHOs+1); % +1 for 0 cases 
+    thetaMaxIndex = 4*(sparams.nOriginHOs+1); % +1 for 0 cases 
     
     h = waitbar(0,sprintf('Theta indices a:%04d/%d  b:%04d/%d',0,thetaMaxIndex,0,thetaMaxIndex),...
         'Name','Finding theta integrals...',...

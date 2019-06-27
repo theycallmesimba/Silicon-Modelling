@@ -10,24 +10,23 @@ function sparams = solveCMEsSameOrbital( sparams )
     % We need to loop through all of the possible two electron
     % configurations.  <alpha,beta|v|gamma,delta>
     % This part will be long depending on your basis size.
-    sparams.CMEsNonShifted = zeros(sparams.nNonShiftedHOs^2,sparams.nNonShiftedHOs^2);
+    sparams.CMEsOrigin = zeros(sparams.nOriginHOs^2,sparams.nOriginHOs^2);
     
     % Produce lookup table for n and m values depending on what HO index we
     % are on.  This is needed for parallel computation in which we'll get
     % rid of any reference to sparams here since we don't want the huge
     % overhead in sending sparams to each worker in our parallel pool.
-    indexLookup = zeros(sparams.nNonShiftedHOs,2);
-    for ii = 1:sparams.nNonShiftedHOs
-        indexLookup(ii,1) = sparams.nonShiftedHOs(ii).n;
-        indexLookup(ii,2) = sparams.nonShiftedHOs(ii).m;
+    indexLookup = zeros(sparams.nOriginHOs,2);
+    for ii = 1:sparams.nOriginHOs
+        indexLookup(ii,1) = sparams.originHOs(ii).n;
+        indexLookup(ii,2) = sparams.originHOs(ii).m;
     end
     thetaInts = getThetaIntegrals(sparams);
-    numOfWFs = sparams.nNonShiftedHOs;
+    numOfWFs = sparams.nOriginHOs;
     
     % Calculate the Bohr radii and coulomb parameters
     omega = abs(mean(sparams.fittedPotentialParameters(:,1)));
     A = sqrt(sparams.hbar/(sparams.me*omega));
-    k = 1/(4*pi*sparams.eps)*sparams.ee*sparams.ee;
     
     h = waitbar(0,sprintf('alpha:%03d/%d  delta:%03d/%d',0,numOfWFs,0,numOfWFs),...
         'Name','Finding non shifted HO CMEs...',...
@@ -70,6 +69,8 @@ function sparams = solveCMEsSameOrbital( sparams )
                     % Do the embedded loops
                     result = CMEhelper(thetaInts,nalpha,malpha,nbeta,mbeta,...
                         ngamma,mgamma,ndelta,mdelta);
+                    result = 1/(2*pi*A*sqrt(2*nalpha*malpha*ndelta*mdelta*...
+                        nbeta*mbeta*ngamma*mgamma))*result;
                  
                     % Making a row vector with elements increasing as
                     % [<a_0b_0|v|g_0d_1> ... <a_0b_0|v|g_0d_M>]
@@ -99,7 +100,7 @@ function sparams = solveCMEsSameOrbital( sparams )
             % [       ...                ...                   ...                ...                   ...       ]
             % [<a_Mb_M|v|g_1d_1>, <a_Mb_M|v|g_1d_2> ... <a_Mb_M|v|g_1d_M>, <a_Mb_M|v|g_2d_1> ... <a_Mb_M|v|g_Md_M>]
             % M = sparams.nNonShiftedHOs
-            sparams.CMEsNonShifted(beta + (alpha - 1)*numOfWFs,:) = temp;
+            sparams.CMEsOrigin(beta + (alpha - 1)*numOfWFs,:) = temp;
             
             if flag == 1
                 break;
@@ -111,10 +112,14 @@ function sparams = solveCMEsSameOrbital( sparams )
     end
     delete(h);
     
-    % As a final step, we need to multiply our CME by the scaling factor from
-    % our Coulomb potential e^2/(4*pi*e_r)
-    k = 1/(4*pi*sparams.eps)*sparams.ee*sparams.ee;
-    sparams.CMEsNonShifted = k*sparams.CMEsNonShifted;
+    if strcmp(sparams.unitsType,'SI')
+        % As a final step, we need to multiply our CME by the scaling factor from
+        % our Coulomb potential e^2/(4*pi*e_r)
+        k = 1/(4*pi*sparams.eps)*sparams.ee*sparams.ee;
+    elseif strcmp(sparams.unitsType,'Rydberg')
+        k = 1/2;
+    end
+    sparams.CMEsOrigin = k*sparams.CMEsOrigin;
 end
 
 % Just a function to help reduce clutter up above with all the summations
