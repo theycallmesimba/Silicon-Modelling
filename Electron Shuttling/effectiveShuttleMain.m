@@ -337,7 +337,7 @@ effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
 % results.fidelity(end)
 %%
 %%nPts = 400;
-dP = pi/3;
+dP = pi/1000;
 vL = [150]*1E-6*sparams.ee;
 vR = [150]*1E-6*sparams.ee;
 sO = [2]*1E-6*sparams.ee;
@@ -347,7 +347,7 @@ tc = 75*1E-6*sparams.ee;
 E0 = 0E-3*sparams.ee;
 nPts = 500;
 
-sparams.includeSpin = 0;
+sparams.includeSpin = 1;
 sparams.includeValley = 1;
 sparams.includeSecondSpin = 0;
 sparmas.includeExcitedOrbital = 0;
@@ -361,9 +361,9 @@ epsR = linspace(det,-det,nPts)*sparams.ee + E0;
 effHamiltonianParams = buildEffHamiltonianParamVariable(epsL, epsR,...
     tc, Ez, Ex, vL*exp(-1i*dP/2), vR*exp(1i*dP/2), sO, sO, NaN, NaN);
 
-% analyzeEffectiveEnergySpectrum(sparams, effHamiltonianParams, 'detuning', {'spin','Z'});
-analyzeEffectiveEnergySpectrum(sparams, effHamiltonianParams, 'detuning', {'none',''});
+analyzeEffectiveEnergySpectrum(sparams, effHamiltonianParams, 'detuning', {'valley','X'});
+% analyzeEffectiveEnergySpectrum(sparams, effHamiltonianParams, 'detuning', {'none',''});
 
-export_fig 'valley-orbitEnergySpectrum' -m5
+% export_fig 'valley-orbitEnergySpectrum' -m5
 
 

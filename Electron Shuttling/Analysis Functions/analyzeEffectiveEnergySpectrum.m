@@ -98,7 +98,7 @@ function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable, d
                 for ii = 1:nStates
                     yy = [energies(ii,:);energies(ii,:)]/sparams.ee;
                     zz = [valExp(ii,:);valExp(ii,:)];
-                    surf(xx,yy,zz,'Linewidth',2);
+                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',2);
                 end
                 hcb = colorbar;
                 colormap(jet);
@@ -113,7 +113,7 @@ function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable, d
                 for ii = 1:nStates
                     yy = [energies(ii,:);energies(ii,:)]/sparams.ee;
                     zz = [orbExp(ii,:);orbExp(ii,:)];
-                    surf(xx,yy,zz,'Linewidth',2);
+                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',2);
                 end
                 hcb = colorbar;
                 colormap(jet);
