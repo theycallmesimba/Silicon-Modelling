@@ -32,28 +32,28 @@ fprintf(1,'Finding 2D localized harmonic orbitals...\n');
 sparams = solveFor2DLocalizedHOs(sparams,XX,YY);
 
 % Show the 2D LOHOs and check that they are properly normalized
-debugHere = 0;
+debugHere = 1;
 if sparams.verbose && debugHere
     checkLOHOStates(sparams,XX,YY);
 end
 %%
-fprintf(1,'Performing Loewdin Orthonormalization...\n');
-% We want to obtain a transformation matrix that rotates from a basis
-% composed of localized harmonic orbitals and our iterant basis of orbitals
-% for the arbitrary potential.  If we just take the localized HO basis of a
-% single dot, it is indeed orthonormal.  But once we have more than one
-% dot, composing a basis of many of these localized HO basis sets will not
-% be orthonormal as the wave functions will have overlap.  To get around
-% this, we do a Loewdin orthonormalization technique.  The first part of
-% this is to get an overlap matrix S from which we will transform our basis
-% set {\ket{a_new}} = S^{1/2}{\ket{a}}
-sparams = solveLoewdinOrthonormalization(sparams, XX, YY);
-
-% Check orthonormality of the states
-debugHere = 0;
-if sparams.verbose && debugHere
-    checkLoeLOHOStates(sparams,XX,YY)
-end
+% fprintf(1,'Performing Loewdin Orthonormalization...\n');
+% % We want to obtain a transformation matrix that rotates from a basis
+% % composed of localized harmonic orbitals and our iterant basis of orbitals
+% % for the arbitrary potential.  If we just take the localized HO basis of a
+% % single dot, it is indeed orthonormal.  But once we have more than one
+% % dot, composing a basis of many of these localized HO basis sets will not
+% % be orthonormal as the wave functions will have overlap.  To get around
+% % this, we do a Loewdin orthonormalization technique.  The first part of
+% % this is to get an overlap matrix S from which we will transform our basis
+% % set {\ket{a_new}} = S^{1/2}{\ket{a}}
+% sparams = solveLoewdinOrthonormalization(sparams, XX, YY);
+% 
+% % Check orthonormality of the states
+% debugHere = 0;
+% if sparams.verbose && debugHere
+%     checkLoeLOHOStates(sparams,XX,YY)
+% end
 %%
 [sparams, HLOHO] = solveLinearCombinationHOs(sparams,XX,YY,VV);
 
@@ -74,8 +74,8 @@ if sparams.verbose && debugHere
 end
 %%
 
-sparams = solveLoeToOriginCoeffs(sparams,XX,YY);
-% sparams = solveLOHOToOriginCoeffs(sparams,XX,YY);
+% sparams = solveLoeToOriginCoeffs(sparams,XX,YY);
+sparams = solveLOHOToOriginCoeffs(sparams,XX,YY);
 
 % Check that the bcoeffs are correct by trying to build the Loe states
 debugHere = 0;
@@ -109,6 +109,8 @@ end
 % end
 
 [~,Hactual] = solve2DSingleElectronSE(sparams, XX, YY, VV, 10);
+[~,perm] = sort(diag(Hactual));
+Hactual = Hactual(perm,perm);
 
 HLOHOA = sparams.acoeffs*HLOHO*sparams.acoeffs';
 [~,perm] = sort(diag(HLOHOA));
@@ -131,6 +133,9 @@ sparams = solveCMEsSameOrbital(sparams);
 % Save because that took a very long time
 % save('exchangeTest1.mat','sparams','V','X','Y');
 toc;
+%%
+CMEsHOs = kron(sparams.bcoeffs,sparams.bcoeffs)*sparams.CMEsOrigin*kron(sparams.bcoeffs,sparams.bcoeffs)';
+CMEsIter = kron(sparams.acoeffs,sparams.acoeffs)*CMEsHOs*kron(sparams.acoeffs,sparams.acoeffs)';
 %%
 % Now we need to build our fermionic creation and annhilation operators
 % sparams = createFermionicLadderOperators(sparams);

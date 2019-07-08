@@ -1,4 +1,4 @@
-function CME = calculateCME(thetaIntegrals, bohrRadii, k, na, ma, nb, mb, ng, mg, nd, md)
+function CME = calculateCME(thetaIntegrals, A, na, ma, nb, mb, ng, mg, nd, md)
 
     CME = 0;
     
@@ -32,9 +32,8 @@ function CME = calculateCME(thetaIntegrals, bohrRadii, k, na, ma, nb, mb, ng, mg
     end
     
     % Do some scalings of the terms
-    CME = CME/(2*pi*bohrRadii*sqrt(2));
+    CME = CME/(2*pi*A*sqrt(2));
     CME = CME/sqrt(factorial(na)*factorial(ma)*...
         factorial(nb)*factorial(mb)*factorial(ng)*...
         factorial(mg)*factorial(nd)*factorial(md));
-    CME = k*CME;
 end

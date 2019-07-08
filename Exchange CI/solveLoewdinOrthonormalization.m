@@ -11,7 +11,7 @@ function sparams = solveLoewdinOrthonormalization( sparams, X, Y )
             smatrixLOHOs(ii,jj) = getInnerProduct2D(currWFii,currWFjj,X,Y);
         end
     end
-    
+    smatrixLOHOs
     % Now get the square root of the matrix
     sSQRTinv = sqrtm(smatrixLOHOs);
     

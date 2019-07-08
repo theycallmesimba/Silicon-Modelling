@@ -51,8 +51,8 @@ sparams.ngridx = 0;
 sparams.ngridy = 0;
 % Sets the maximum value for the non shfited HO we will use when we rewrite
 % the basis of shifted HOs into non shifted HOs
-sparams.maxOriginHOsX = 10; 
-sparams.maxOriginHOsY = 10;
+sparams.maxOriginHOsX = 5; %10; 
+sparams.maxOriginHOsY = 5; %10;
 sparams.nOriginHOs = sparams.maxOriginHOsX*sparams.maxOriginHOsY;
 % Set tolerance level for norm checks
 sparams.normThreshold = 1E-14;

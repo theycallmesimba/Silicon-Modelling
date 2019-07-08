@@ -67,10 +67,12 @@ function sparams = solveCMEsSameOrbital( sparams )
                     mdelta = indexLookup(delta,2);
                     
                     % Do the embedded loops
-                    result = CMEhelper(thetaInts,nalpha,malpha,nbeta,mbeta,...
-                        ngamma,mgamma,ndelta,mdelta);
-                    result = 1/(2*pi*A*sqrt(2*nalpha*malpha*ndelta*mdelta*...
-                        nbeta*mbeta*ngamma*mgamma))*result;
+                    result = calculateCME(thetaInts, A, nalpha, malpha,...
+                        nbeta, mbeta, ngamma, mgamma, ndelta, mdelta);
+%                     result = CMEhelper(thetaInts,nalpha,malpha,nbeta,mbeta,...
+%                         ngamma,mgamma,ndelta,mdelta);
+%                     result = 1/(2*pi*A*sqrt(2*nalpha*malpha*ndelta*mdelta*...
+%                         nbeta*mbeta*ngamma*mgamma))*result;
                  
                     % Making a row vector with elements increasing as
                     % [<a_0b_0|v|g_0d_1> ... <a_0b_0|v|g_0d_M>]
@@ -122,41 +124,41 @@ function sparams = solveCMEsSameOrbital( sparams )
     sparams.CMEsOrigin = k*sparams.CMEsOrigin;
 end
 
-% Just a function to help reduce clutter up above with all the summations
-% going on
-function temp = CMEhelper(thetaIntegrals, na, ma, nb, mb, ng, mg, nd, md)
-
-    temp = 0;
-    
-    % Here we do a nice check to skip a bunch of potential loops.  Since
-    % the p's are multiplied by 2's in the aa and bb calculation, the only
-    % way the theta integrals will be non-zero are if na + nd + nb + ng is
-    % even AND ma + md + mb + mg is even.  If these conditions aren't met,
-    % then all of the theta integrals will be 0, so the CME element is 0.
-    if mod(na + nd + nb + ng,2) ~= 0 || mod(ma + md + mb + mg,2) ~= 0
-        temp = 0;
-        return;
-    end
-    
-    for p1 = 0:min(na,nd) 
-        coef1 = factorial(p1)*nchoosek(na,p1)*nchoosek(nd,p1);
-        for p2 = 0:min(ma,md)
-            coef2 = coef1*factorial(p2)*nchoosek(ma,p2)*nchoosek(md,p2);
-            for p3 = 0:min(nb,ng)
-                coef3 = coef2*factorial(p3)*nchoosek(nb,p3)*nchoosek(ng,p3);
-                for p4 = 0:min(mb,mg)                     
-                    aa = na + nd + nb + ng - 2*p1 - 2*p3;
-                    bb = ma + md + mb + mg - 2*p2 - 2*p4;
-                    
-                    coef4 = coef3*factorial(p4)*nchoosek(mb,p4)*nchoosek(mg,p4);
-
-                    p = (aa + bb)/2;
-                    temp = temp + coef4*thetaIntegrals(aa+1,bb+1)*gamma(p + 1/2);      
-                end
-            end
-        end
-    end
-end
-
-
+% % Just a function to help reduce clutter up above with all the summations
+% % going on
+% function temp = CMEhelper(thetaIntegrals, na, ma, nb, mb, ng, mg, nd, md)
+% 
+%     temp = 0;
+%     
+%     % Here we do a nice check to skip a bunch of potential loops.  Since
+%     % the p's are multiplied by 2's in the aa and bb calculation, the only
+%     % way the theta integrals will be non-zero are if na + nd + nb + ng is
+%     % even AND ma + md + mb + mg is even.  If these conditions aren't met,
+%     % then all of the theta integrals will be 0, so the CME element is 0.
+%     if mod(na + nd + nb + ng,2) ~= 0 || mod(ma + md + mb + mg,2) ~= 0
+%         temp = 0;
+%         return;
+%     end
+%     
+%     for p1 = 0:min(na,nd) 
+%         coef1 = factorial(p1)*nchoosek(na,p1)*nchoosek(nd,p1);
+%         for p2 = 0:min(ma,md)
+%             coef2 = coef1*factorial(p2)*nchoosek(ma,p2)*nchoosek(md,p2);
+%             for p3 = 0:min(nb,ng)
+%                 coef3 = coef2*factorial(p3)*nchoosek(nb,p3)*nchoosek(ng,p3);
+%                 for p4 = 0:min(mb,mg)                     
+%                     aa = na + nd + nb + ng - 2*p1 - 2*p3;
+%                     bb = ma + md + mb + mg - 2*p2 - 2*p4;
+%                     
+%                     coef4 = coef3*factorial(p4)*nchoosek(mb,p4)*nchoosek(mg,p4);
+% 
+%                     p = (aa + bb)/2;
+%                     temp = temp + coef4*thetaIntegrals(aa+1,bb+1)*gamma(p + 1/2);      
+%                 end
+%             end
+%         end
+%     end
+% end
+% 
+% 
 
