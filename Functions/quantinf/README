@@ -1,0 +1,8 @@
+To use these functions, save the files to somewhere where Matlab and/or Octave can find them.
+
+
+To get help on any of the functions, try
+
+  $ help <functionname>
+
+at a Matlab or Octave prompt.
