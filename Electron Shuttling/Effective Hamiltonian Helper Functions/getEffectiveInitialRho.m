@@ -15,6 +15,13 @@ function rho0 = getEffectiveInitialRho(sparams,effHamParams)
         psiOrbVal0 = kets(:,1);
         rhoOrbVal0 = psiOrbVal0*psiOrbVal0';
         
+        % DELETE THIS SECTION LATER
+        sparams.includeSpin = 1;
+        sparams.includeOrbital = 0;
+        sparams.includeValley = 0;
+        sparams.includeSecondSpin = 1;
+        
+        
         psiSinglet = 1/sqrt(2)*[0,1,-1,0]';
         rhoSinglet = psiSinglet*psiSinglet';
         

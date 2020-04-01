@@ -1,6 +1,14 @@
-function fidelity = getFidelity(sparams, rho, H)
+function fidelity = getFidelity(sparams, rho, H, rhoToCompare)
 %GETFIDELITY Summary of this function goes here
 %   Detailed explanation goes here
+    
+    % If not specified as an argument, default to comparing with the
+    % singlet
+    if nargin < 4
+        ketToCompare = 1/sqrt(2)*[0,1,-1,0]';
+        rhoToCompare = ketToCompare*ketToCompare';
+    end
+
     if ~sparams.includeSecondSpin
         [kets,ens] = eig(H);
         [~, ind] = sort(diag(ens));
@@ -16,11 +24,8 @@ function fidelity = getFidelity(sparams, rho, H)
 
         fidelity = abs(trace(currRhoIdeal*rho))^2;
     else
-        singlet = 1/sqrt(2)*[0,1,-1,0]';
-        rhoSinglet = singlet*singlet';
-        rhoToCheck = kron(eye(4),rhoSinglet);
-
-        fidelity = abs(trace(rhoToCheck*rho))^2;
+        rhoToCompare = kron(eye(4),rhoToCompare);
+        fidelity = abs(trace(rhoToCompare*rho))^2;
     end
 end
 

@@ -1,8 +1,11 @@
-function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable, dataTypeToPlot)
+function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable,...
+    dataTypeToPlot, colorRange)
 %ANALYZEEFFECTIVEENERGYSPECTRUM Summary of this function goes here
 %   Detailed explanation goes here
+
     colorAxisVariable = dataTypeToPlot{1};
     colorAxisAxis = dataTypeToPlot{2};
+    linewidth = 2;
     
     switch lower(variedVariable)
         case 'detuning'
@@ -24,7 +27,9 @@ function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable, d
     if sparams.includeSpin
         nStates = 2*nStates;
     end
-        
+    if sparams.includeSecondSpin
+        nStates = 2*nStates;
+    end   
     
     energies = zeros(nStates,nPts);
     for ii = 1:nPts
@@ -75,20 +80,35 @@ function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable, d
     set(gcf,'Color','white');
     set(gca,'Fontsize',14,'TickLabelInterpreter','latex');
     xx = [variedData;variedData]/sparams.ee;
+    if (floor(log10(abs(min(min(xx))))) < -3) ||...
+            (floor(log10(abs(max(max(xx))))) < -3)
+        xx = xx*1E6;
+        xlabel('Detuning [$\mu$eV]','Fontsize',18,'Interpreter','latex');
+    else
+        xlabel('Detuning [eV]','Fontsize',18,'Interpreter','latex');
+    end
+    energies = energies/sparams.ee;
+    if (floor(log10(abs(min(min(energies))))) < -3) ||...
+            (floor(log10(abs(max(max(energies))))) < -3)
+        energies = energies*1E6;
+        ylabel('Energy [$\mu$eV]','Fontsize',18,'Interpreter','latex');
+    else
+        ylabel('Energy [eV]','Fontsize',18,'Interpreter','latex');
+    end
+    
     switch lower(colorAxisVariable)
         case 'spin'
             if ~sparams.includeSpin
                 error('Spin was not included in the effective Hamiltonian simulation.\nPlease choose a different variable for the color axis.');
             else
                 for ii = 1:nStates
-                    yy = [energies(ii,:);energies(ii,:)]/sparams.ee;
+                    yy = [energies(ii,:);energies(ii,:)];
                     zz = [spinExp(ii,:);spinExp(ii,:)];
-                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',2);
+                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',linewidth);
                 end
                 hcb = colorbar;
                 colormap(jet);
                 caxis([-1,1]);
-                hcb.TickLabelInterpreter = 'latex';
                 ylabel(hcb,['Spin $\langle ',colorAxisAxis,'\rangle$'],'Interpreter','latex','Fontsize',18);
             end
         case 'valley'
@@ -96,14 +116,13 @@ function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable, d
                 error('Valley was not included in the effective Hamiltonian simulation.\nPlease choose a different variable for the color axis.');
             else
                 for ii = 1:nStates
-                    yy = [energies(ii,:);energies(ii,:)]/sparams.ee;
+                    yy = [energies(ii,:);energies(ii,:)];
                     zz = [valExp(ii,:);valExp(ii,:)];
-                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',2);
+                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',linewidth);
                 end
                 hcb = colorbar;
                 colormap(jet);
                 caxis([-1,1]);
-                hcb.TickLabelInterpreter = 'latex';
                 ylabel(hcb,['Valley $\langle ',colorAxisAxis,'\rangle$'],'Interpreter','latex','Fontsize',18);
             end
         case 'orbital'
@@ -111,22 +130,28 @@ function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable, d
                 error('Orbital was not included in the effective Hamiltonian simulation.\nPlease choose a different variable for the color axis.');
             else
                 for ii = 1:nStates
-                    yy = [energies(ii,:);energies(ii,:)]/sparams.ee;
+                    yy = [energies(ii,:);energies(ii,:)];
                     zz = [orbExp(ii,:);orbExp(ii,:)];
-                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',2);
+                    surf(xx,yy,zz,'EdgeColor','flat','Linewidth',linewidth);
                 end
                 hcb = colorbar;
                 colormap(jet);
                 caxis([-1,1]);
-                hcb.TickLabelInterpreter = 'latex';
                 ylabel(hcb,['Orbital $\langle ',colorAxisAxis,'\rangle$'],'Interpreter','latex','Fontsize',18);
             end
         otherwise
-            plot(variedData/sparams.ee,energies/sparams.ee,'Linewidth',2,'Color','k');
+            plot(xx(1,:),energies,'Linewidth',linewidth,'Color','k');
     end
-    xlim([min(variedData),max(variedData)]/sparams.ee);
-    ylabel('Energy [eV]','Fontsize',18,'Interpreter','latex');
-    xlabel('Detuning [eV]','Fontsize',18,'Interpreter','latex');
+    % If we triggered the 'otherwise' case in the above switch statement,
+    % then there is no hcb so just catch that error.
+    try
+        set(hcb, 'YAxisLocation','top','Location','north',...
+        'TickLabelInterpreter','latex');
+    catch
+        % Do nothing
+    end
+
+    xlim([min(min(xx)),max(max(max(xx)))]);
     view(2);
 end
 

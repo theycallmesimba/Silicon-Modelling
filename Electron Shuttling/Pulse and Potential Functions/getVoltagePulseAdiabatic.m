@@ -93,8 +93,8 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     semilogy(qXPoints,adiabQPoints);
     ylabel('Adiabatic parameter [arb]','Interpreter','Latex');
     drawnow;
-    pause(0.75);
-    delete(fig);
+%     pause(0.75);
+%     delete(fig);
     
     % This flag is for if we just want a linear collection of voltage 
     % points and don't want to find the corresponding adiabatic pulse
@@ -137,7 +137,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     
     for ii = 1:length(qXPoints)        
         % For each point in the voltage pulse, find what time gives it the
-        % adiabatic threshold parameter value
+        % desired adiabatic threshold parameter value
         [optimalTimePower, ~] = optimizeTimeForAdiabicity(sparams,xx,ii,...
             length(qXPoints),gPulse,adiabPoints,effHamiltonianParams);
         optimalTime(ii) = 10^optimalTimePower;
@@ -165,7 +165,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
         end
         drawnow;
     end
-    delete(fig);
+%     delete(fig);
     toc;
     
     voltagePulse = zeros(length(sparams.gatesUsedInPulse),sparams.nPulsePoints);

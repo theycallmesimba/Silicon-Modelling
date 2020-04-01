@@ -17,7 +17,7 @@ function plotEffHamResults2D(dataX, dataStrX, dataY, dataStrY, dataZ, dataStrZ, 
             xLabelStr = 'T_2 [s]';
             xInd = 2;
         case 'valleyL'
-            xLabelStr = 'Valley splitting (left dot) [$\mu$eV]';
+            xLabelStr = '$|\Delta_L|$ [$\mu$eV]';
             dataX = dataX/1.602E-19/1E-6;
             xInd = 3;
         case 'valleyR'
@@ -25,7 +25,7 @@ function plotEffHamResults2D(dataX, dataStrX, dataY, dataStrY, dataZ, dataStrZ, 
             dataX = dataX/1.602E-19/1E-6;
             xInd = 4;
         case 'dPhi'
-            xLabelStr = 'Valley $\delta\phi$ [rads]';
+            xLabelStr = '$\delta\phi$ [rads]';
             xInd = 5;
         case 'spinOrbit'
             xLabelStr = 'Spin orbit coupling [$\mu$eV]';
@@ -57,7 +57,7 @@ function plotEffHamResults2D(dataX, dataStrX, dataY, dataStrY, dataZ, dataStrZ, 
             dataY = dataY/1.602E-19/1E-6;
             yInd = 4;
         case 'dPhi' 
-            yLabelStr = 'Valley $\delta\phi$ [rads]';
+            yLabelStr = '$\delta\phi$ [rads]';
             yInd = 5;
         case 'spinOrbit'
             yLabelStr = 'Spin orbit coupling [$\mu$eV]';
@@ -75,17 +75,21 @@ function plotEffHamResults2D(dataX, dataStrX, dataY, dataStrY, dataZ, dataStrZ, 
     
     switch dataStrZ
         case 'velocity'
-            zAxisLabel = 'Electron velocity [nm/ns]';
+            zAxisLabel = 'Shuttle speed [nm/ns]';
         case 'pulseTime'
             zAxisLabel = 'Pulse time [s]';
         case 'singlet fidelity'
-            zAxisLabel = 'Final singlet state fidelity';
+            zAxisLabel = 'Fidelity';
+        case 'singlet infidelity'
+            zAxisLabel = 'Infidelity';
         case 'ground fidelity'
-            zAxisLabel = 'Final ground state fidelity';
+            zAxisLabel = 'Fidelity';
         case 'orbital expectation'
             zAxisLabel = 'Orbital $\langle Z\rangle$';
+        case 'valley expectation'
+            zAxisLabel = 'Valley $\langle Z\rangle$';
         otherwise
-            error('Could not find matching string for Y axis variable.');
+            error('Could not find matching string for Z axis variable.');
     end
     
     % Just in case use forgot to squeeze before sending data...
@@ -117,12 +121,12 @@ function plotEffHamResults2D(dataX, dataStrX, dataY, dataStrY, dataZ, dataStrZ, 
     
     s = surf(DX,DY,DZ);
     
-    if max(dataX)/min(dataX) >= 100 && min(dataX) ~= 0
-        set(gca,'XScale','log');
-    end
-    if max(dataY)/min(dataY) >= 100 && min(dataY) ~= 0
-        set(gca,'YScale','log');
-    end
+%     if max(dataX)/min(dataX) >= 100 && min(dataX) ~= 0
+%         set(gca,'XScale','log');
+%     end
+%     if max(dataY)/min(dataY) >= 100 && min(dataY) ~= 0
+%         set(gca,'YScale','log');
+%     end
     
     set(gca,'TickLabelInterpreter','latex','Fontsize',axisFontSize);
     set(s,'EdgeColor','interp','FaceColor','interp');
@@ -132,7 +136,13 @@ function plotEffHamResults2D(dataX, dataStrX, dataY, dataStrY, dataZ, dataStrZ, 
     if length(zrange) ~= 1
         cb.Limits = zrange;
         caxis(zrange)
-    end   
+    end
+    switch dataStrZ
+        case 'singlet fidelity'
+            caxis([0,1]);
+        case 'singlet infidelity'
+            set(gca,'ColorScale','log');
+    end
     cb.TickLabelInterpreter = 'latex';
     ylabel(cb,zAxisLabel,'Interpreter','latex','Fontsize',labelFontSize);
     xlabel(xLabelStr,'Fontsize',labelFontSize,'Interpreter','latex');

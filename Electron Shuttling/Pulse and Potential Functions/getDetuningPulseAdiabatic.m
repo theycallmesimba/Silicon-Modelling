@@ -76,27 +76,31 @@ function [sparams, detuningPulse, optPulseTime] = getDetuningPulseAdiabatic(...
     % Initialize our pulse by setting to the same initial conditions
     optimalPulseDetuning(:,1) = detPulse(:,1);
     optimalPulseTime(1) = 0;
-    
-    fig = figure;
-    hold on;
-    set(gca,'Fontsize',14,'TickLabelInterpreter','latex');
-    ylabel('Detuning [eV]','Interpreter','Latex','Fontsize',20);
-    xlabel('Time [s]','Interpreter','Latex','Fontsize',20);
-    animatedLines = gobjects(1,sparams.numOfGates);
-    color = {'r','g','b','y','m'};
-    for ii = 1:2
-        animatedLines(ii) = animatedline(optimalPulseTime(1),optimalPulseDetuning(ii,1)/sparams.ee,...
-            'Linestyle','--','Marker','o','Linewidth',1.5,'Color',color{ii});
-    end
-    drawnow;
 
+    %****************************%
     for ii = 1:length(qXPoints)        
         % For each point in the voltage pulse, find what time gives it the
         % adiabatic threshold parameter value
         [optimalTimePower, ~] = optimizeTimeForAdiabicity(sparams,ii,...
             length(qXPoints),detPulse,adiabQPoints,effHamiltonianParams);
         optimalTime(ii) = 10^optimalTimePower;
-
+    end
+    %****************************%
+    
+%     fig = figure;
+%     hold on;
+%     set(gca,'Fontsize',14,'TickLabelInterpreter','latex');
+%     ylabel('Detuning [eV]','Interpreter','Latex','Fontsize',20);
+%     xlabel('Time [s]','Interpreter','Latex','Fontsize',20);
+%     animatedLines = gobjects(1,sparams.numOfGates);
+%     color = {'r','g','b','y','m'};
+%     for ii = 1:2
+%         animatedLines(ii) = animatedline(optimalPulseTime(1),optimalPulseDetuning(ii,1)/sparams.ee,...
+%             'Linestyle','--','Marker','o','Linewidth',1.5,'Color',color{ii});
+%     end
+%     drawnow;
+    
+    for ii = 1:length(qXPoints)
         % Get the corresponding dV/dt for whatever optimal time we found
         % above at the current index point on the voltage pulse
         tVec = linspace(0,optimalTime(ii),length(qXPoints));
@@ -115,12 +119,12 @@ function [sparams, detuningPulse, optPulseTime] = getDetuningPulseAdiabatic(...
         optimalPulseDetuning(:,ii+1) = detPulse(:,ii) + dDet./2;
         optimalPulseTime(ii+1) = optimalPulseTime(ii) + dt/2;
         
-        for jj = 1:2
-            addpoints(animatedLines(jj),optimalPulseTime(ii+1),optimalPulseDetuning(jj,ii+1)/sparams.ee);
-        end
-        drawnow;
+%         for jj = 1:2
+%             addpoints(animatedLines(jj),optimalPulseTime(ii+1),optimalPulseDetuning(jj,ii+1)/sparams.ee);
+%         end
+%         drawnow;
     end
-    delete(fig);
+%     delete(fig);
     toc;
     
     detuningPulse = zeros(2,sparams.nPulsePoints);

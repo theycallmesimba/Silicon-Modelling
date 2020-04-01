@@ -45,7 +45,7 @@ end
 sparams.voltagePulseBounds = [0.2,0.3;0.2,0.3;0.2,0.3];
 sparams.gatesUsedInPulse = [1,2,3]; % Specificies which gates in the geometry you will actually use in the voltage pulse
 sparams.nPulsePoints = length(sparams.gatesUsedInPulse)*500;
-sparams.adiabaticPulseType = 'coherent';
+sparams.adiabaticPulseType = 'effective';
 
 % % Adiabatic Parameters
 sparams.findAdiabaticPulse = 1; % 1 if you want to use adiabatic conditions to find a pulse
