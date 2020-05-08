@@ -46,7 +46,7 @@ sparams.CMEsLib_fPath = 'C:\Users\bbuonaco\Documents\MATLAB\Silicon-Modelling\Ex
 h = 2*sqrt(3);
 % sparams.dotLocations = [0,2/3*h;-2,-h/3;2,-h/3];
 d = 3;
-sparams.dotLocations = [d,0;3*d,0;-d,0;-3*d,0];
+sparams.dotLocations = [d,0;
 [sparams.nDots,~] = size(sparams.dotLocations);
 
 %***Simulation definitions***%
