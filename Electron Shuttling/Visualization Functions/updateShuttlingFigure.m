@@ -9,6 +9,9 @@ function updateShuttlingFigure( sparams, fig, wf1, wf2, vv )
     % Simulated state WF
     h(2).YData = abs(wf1).^2/norm(abs(wf1).^2);
     % Potential
+%     CBoffset = -2.2747;
+%     vvTemp = vv/sparams.ee - CBoffset;
+%     h(3).YData = vvTemp;
     h(3).YData = vv/sparams.ee;
 end
 
