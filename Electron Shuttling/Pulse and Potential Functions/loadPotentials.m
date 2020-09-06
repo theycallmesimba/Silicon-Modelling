@@ -1,4 +1,4 @@
- function [ sparams, xx, zz ] = loadPotentials( sparams, interpFlag, fileFormatType, interpDirs, trimFlag )
+ function [ sparams, xx, yy ] = loadPotentials( sparams, interpFlag, fileFormatType, interpDirs )
 %LOADPOTENTIALS Function to either generate the potential profiles
 %automatically or load them from an external file
 
@@ -12,7 +12,7 @@
         'Name',sprintf('Loading potentials...'),...
         'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
     set(findall(h,'type','text'),'Interpreter','none');
-    set(findall(h),'Units','normalized');
+%     set(findall(h),'Units','normalized');
     set(h,'Position',[0.25,0.4,0.5,0.15]);
     
     currFileVec = ones(1,sparams.numOfGates);
@@ -39,15 +39,15 @@
         
         % Load the actual file (interpolation is done during loading here)
         if nn == 1
-            [xx, zz, pot2D_XZ] = loadPotentialFile(sparams,[sparams.potDir currFName],...
-                interpFlag,fileFormatType,interpDirs,trimFlag);
+            [xx, yy, pot2D_XY] = loadPotentialFileAlt(sparams,[sparams.potDir currFName],...
+                interpFlag,fileFormatType,interpDirs);
         else
-            [~, ~, pot2D_XZ] = loadPotentialFile(sparams,[sparams.potDir currFName],...
-                interpFlag,fileFormatType,interpDirs,trimFlag);
+            [~, ~, pot2D_XY] = loadPotentialFileAlt(sparams,[sparams.potDir currFName],...
+                interpFlag,fileFormatType,interpDirs);
         end
         
         % Convert to J and invert
-        sparams.potentials(nn).pot2D = pot2D_XZ;
+        sparams.potentials(nn).pot2D = pot2D_XY;
         currVgVec = [];
         for ii = 1:sparams.numOfGates
             currVgVec = [currVgVec, sparams.voltagesToLoad{ii}(currFileVec(ii))];
