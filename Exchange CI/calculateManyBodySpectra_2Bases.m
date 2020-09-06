@@ -1,4 +1,4 @@
-function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns] = calculateManyBodySpectra_2Bases(...
+function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns, optOmega] = calculateManyBodySpectra_2Bases(...
     sparams, gparams, optOmegaFlag, debug, CMEs_lib)
 %CALCULATEMANYBODYSPECTRA This function calculates the many electron energy spectra given
 %an arbitrary potential landscape.  The energy spectra is found using a
@@ -13,6 +13,8 @@ function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns] = calculateManyBo
 %   gparams: structure containing all relevant information for the grid.
 %   TODO: add more detail on gparams variables
 %   debug: flag either 0 or 1 used to initiate debug mode or not
+
+    total_sim_time = tic;
 
     % Check input arguments and assign default values
     if nargin < 5
@@ -30,17 +32,23 @@ function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns] = calculateManyBo
     fprintf(1,'Begining many body energy calculation\n\n');
 
     %**************************************%
-    omegaGuess = abs(mean(sparams.fittedPotentialParameters(:,1)));
+%     omegaGuess = abs(mean(sparams.fittedPotentialParameters(:,1)));
+    omegaGuess = sparams.omegaGuess;
+    optomega_time = tic;
     if optOmegaFlag
-        fprintf(1,'Optimizing origin harmonic orbital omega...  ');
+        fprintf(1,'Optimizing origin harmonic orbital omega...\n');
         optOmega = optimizeOmega(sparams,gparams,omegaGuess);
+        fprintf(1,'Found an optimal omega of %.2E\n',optOmega);
+        toc(optomega_time);
+        optomega_time = toc(optomega_time);
         fprintf(1,'Done!\n\n');
     else
         optOmega = omegaGuess;
+        optomega_time = toc(optomega_time);
     end
     
     %**************************************%
-    fprintf(1,'Finding 2D harmonic orbitals at origin...  ');
+    fprintf(1,'Finding 2D harmonic orbitals at origin...\n');
     % Create a new basis of HOs centered at the origin of our dots
     [originHOs, originOmega] = createOriginHOs(sparams,gparams,optOmega);
 
@@ -49,39 +57,45 @@ function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns] = calculateManyBo
         basisToCheck = originHOs;
         nStates = sparams.nOriginHOs;
         plot2DBasis(gparams,basisToCheck,16);
-        check2DBasisOrthogonality(sparams,gparams,basisToCheck,nStates);
-        check2DBasisNormality(sparams,gparams,basisToCheck,nStates);
+%         check2DBasisOrthogonality(sparams,gparams,basisToCheck,nStates);
+%         check2DBasisNormality(sparams,gparams,basisToCheck,nStates);
     end
     fprintf(1,'Done!\n\n');
 
     %**************************************%
-    fprintf(1,'Finding A matrix...  ');
+    fprintf(1,'Finding A matrix...\n');
     nStates = sparams.nOriginHOs;
     basisToUse = originHOs;
 %     [acoeffs, ~, sparams.LCHOEnergies] = findTMatrixViaHamiltonian(sparams, gparams, basisToUse, nStates);
 
-    itinOrbs = findItinerantBasis(sparams, gparams, sparams.nItinerantOrbitals);
+    aMat_time = tic;
+%     itinOrbs = findItinerantBasis(sparams, gparams, sparams.nItinerantOrbitals);
     
-    acoeffs = findTMatrixViaInnerProd(gparams, basisToUse, itinOrbs);
+%     acoeffs = findTMatrixViaInnerProd(gparams, basisToUse, itinOrbs);
+    [ acoeffs, ~, ens ] = findTMatrixViaHamiltonian(sparams,...
+        gparams, basisToUse, nStates);
+    sparams.LCHOEnergies = ens;
 
-    % Now find the itinerant basis energies using acoeffs
-    sparams.LCHOEnergies = zeros(1,sparams.nItinerantOrbitals);
-    full2DLap = make2DSELap(sparams,gparams);
-    for ii = 1:sparams.nItinerantOrbitals
-        tempwf = zeros(gparams.ngridy*gparams.ngridx,1);
-
-        for jj = 1:nStates
-            tempwf = tempwf + acoeffs(ii,jj)*originHOs(jj).wavefunctionNO;
-        end
-        
-        sparams.LCHOEnergies(ii) = getInnerProduct2D(itinOrbs(ii).wavefunctionMG,...
-            convertNOtoMG(full2DLap*tempwf,gparams.ngridx,gparams.ngridy), gparams.XX, gparams.YY);
-    end
+%     % Now find the itinerant basis energies using acoeffs
+%     sparams.LCHOEnergies = zeros(1,sparams.nItinerantOrbitals);
+%     full2DLap = make2DSELap(sparams,gparams);
+%     for ii = 1:sparams.nItinerantOrbitals
+%         tempwf = zeros(gparams.ngridy*gparams.ngridx,1);
+% 
+%         for jj = 1:nStates
+%             tempwf = tempwf + acoeffs(ii,jj)*originHOs(jj).wavefunctionNO;
+%         end
+%         
+%         sparams.LCHOEnergies(ii) = getInnerProduct2D(itinOrbs(ii).wavefunctionMG,...
+%             convertNOtoMG(full2DLap*tempwf,gparams.ngridx,gparams.ngridy), gparams.XX, gparams.YY);
+%     end
     
     % Truncate A in accordance with how many itinerant orbitals we want
     acoeffs = acoeffs(1:sparams.nItinerantOrbitals,:);
     sparams.LCHOEnergies = sparams.LCHOEnergies(1:sparams.nItinerantOrbitals);
     LCHOEns = sparams.LCHOEnergies;
+    toc(aMat_time);
+    aMat_time = toc(aMat_time);
     
     % Check if the transformation is orthonormal
     if sparams.verbose && debug
@@ -97,7 +111,14 @@ function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns] = calculateManyBo
         checkBasisTransformation(sparams, gparams, basisToT, basisToCompare, acoeffs);
     end
     fprintf(1,'Done!\n\n');
-
+    
+    %%%%%%%%%%
+%     manyBody_evecs = 0;
+%     manyBody_ens = 0;
+%     CMEs_lib_sub = CMEs_lib;
+%     return;
+    %%%%%%%%%%
+    
     %**************************************%
     if CMEs_lib_supplied == 1
         % CME library supplied as argument, so no need to load anything
@@ -137,7 +158,8 @@ function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns] = calculateManyBo
     end
     fprintf(1,'Done!\n\n');
 
-    fprintf(1,'Transforming the CME library to itinerant basis...  ');
+    transform_time = tic;
+    fprintf(1,'Transforming the CME library to itinerant basis...\n');
     % Get a subset of the CMEs if the given nOrigins parameter in the
     % simparams file is less than what we've solved for in the library
     % already. Useful for checking convergence wrt number of orbitals. 
@@ -146,21 +168,40 @@ function [manyBody_evecs, manyBody_ens, CMEs_lib_sub, LCHOEns] = calculateManyBo
     % Scale the CMEs to match the origin HOs used to form transformation
     % matrix
     A = sqrt(sparams.hbar/(sparams.me*originOmega));
-    acoeffsTol = 1E-10;
-    acoeffs(acoeffs < acoeffsTol & acoeffs > -acoeffsTol) = 0;
-    acoeffs = sparse(acoeffs);
+%     acoeffsTol = 1E-10;
+%     acoeffs(acoeffs < acoeffsTol & acoeffs > -acoeffsTol) = 0;
+%     acoeffs = sparse(acoeffs);
     kronAcoeffs = kron(acoeffs,acoeffs);
-    tic;
-    CMEsItin = (kronAcoeffs*(CMEs_lib_sub/A))*kronAcoeffs';
-    toc;
+    CMEsItin = (kronAcoeffs*(full(CMEs_lib_sub)/A))*kronAcoeffs';
+    toc(transform_time);
+    transform_time = toc(transform_time);
     fprintf(1,'Done!\n');
     
-    fprintf(1,'Building 2nd quantization Hamiltonian and diagonalizing...  ');
+    build2nd_time = tic;
+    fprintf(1,'Building 2nd quantization Hamiltonian and diagonalizing...\n');
     % Build the 2nd quantization Hamiltonian and then diagonalize it to
     % obtain the egienvectors and eigenenergies of the system.
+    debug = 0;
+    fprintf(1,'WARNING: DEBUG FOR HERE IS TURNED OFF MANUALLY RIGHT NOW!\n');
     H2ndQ = buildSecondQuantizationHam(sparams, CMEsItin, debug);
+    toc(build2nd_time);
+    build2nd_time = toc(build2nd_time);
     
     [manyBody_evecs, manyBody_ens] = eigs(H2ndQ,sparams.nOutputtedEnergies,'sa');
     fprintf(1,'Done!\n');
+    
+    total_sim_time = toc(total_sim_time);
+    
+    % Display runtime information/etc.
+    fprintf(1,'\nTotal simulation time: %.2f sec, %.2f min.\n',...
+        total_sim_time,total_sim_time/60);
+    fprintf(1,'Time optimizing omega: %.2f sec, %.2f%% of total.\n',...
+        optomega_time,optomega_time/total_sim_time*100);
+    fprintf(1,'Time finding A matrix: %.2f sec, %.2f%% of total.\n',...
+        aMat_time,aMat_time/total_sim_time*100);
+    fprintf(1,'Time transforming CMEs: %.2f sec, %.2f%% of total.\n',...
+        transform_time,transform_time/total_sim_time*100);
+    fprintf(1,'Time building 2nd quantization H: %.2f sec, %.2f%% of total.\n',...
+        build2nd_time,build2nd_time/total_sim_time*100);
 end
 

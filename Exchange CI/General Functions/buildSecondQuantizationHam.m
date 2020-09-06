@@ -14,8 +14,8 @@ function [H2ndQ, T, Hc] = buildSecondQuantizationHam( sparams, CMEsItin, debug )
     % calculation after truncating the spin sub-space
     [nSOStates,~] = size(SOvectors);
     
-    T = sparse(zeros(nSOStates));
-    Hc = sparse(zeros(nSOStates));
+    T = zeros(nSOStates);
+    Hc = zeros(nSOStates);
     
     % The second quantization hamiltonian has two terms: T + H_c.  T
     % describes all the single particle energies in the hamiltonian while
@@ -33,26 +33,19 @@ function [H2ndQ, T, Hc] = buildSecondQuantizationHam( sparams, CMEsItin, debug )
         currElecOrbitals = SOvectors(ii,1:sparams.numElectrons);
         T(ii,ii) = sum(itinOrbitalEnergies(currElecOrbitals));
     end
-    
-%     tic;
-    % Now that the T matrix is assembled, let's turn to the H_c term.
-%     parfor nn = 1:nSOStates
-%         for mm = 1:nSOStates
-%             Hc(nn,mm) = hcHelper(sparams, nn, mm, CMEsItin,...
-%                 SOvectors, SOvectors_map);
-%         end
-%     end
-%     toc;
-    
-%     tic;
+   
     % Now that the T matrix is assembled, let's turn to the H_c term.
     for nn = 1:nSOStates
-        for mm = 1:nSOStates
+        for mm = (nn+1):nSOStates
             Hc(nn,mm) = hcHelper(sparams, nn, mm, CMEsItin,...
                 SOvectors, SOvectors_map);
         end
     end
-%     toc;
+    Hc = Hc + Hc';
+    for nn = 1:nSOStates
+        Hc(nn,nn) = hcHelper(sparams, nn, nn, CMEsItin,...
+            SOvectors, SOvectors_map);
+    end
     
     % Build the full Hamiltonian (and correct numerical errors by forcing
     % it to be symmetric)
@@ -61,7 +54,6 @@ function [H2ndQ, T, Hc] = buildSecondQuantizationHam( sparams, CMEsItin, debug )
 end
 
 function hcElem = hcHelper(sparams, nn, mm, CMEsItin, SOvectors, SOvectors_map)
-
     nElec = sparams.numElectrons;
     
     [nSO,~] = size(SOvectors_map); 
@@ -107,6 +99,8 @@ function hcElem = hcHelper(sparams, nn, mm, CMEsItin, SOvectors, SOvectors_map)
             % Now calculate the phase from applying these anhilation
             % operators
             braPhase = calculatePhaseHelper(braState);
+            
+            braStateMod = braState(braState ~= -1);
             
             % Used for the final two checks
             iiOrbital = SOvectors_map(ii,1);
@@ -155,7 +149,6 @@ function hcElem = hcHelper(sparams, nn, mm, CMEsItin, SOvectors, SOvectors_map)
                     % and kets.. Check that all the remaining electrons are
                     % the same for the bra and ket.  Otherwise, the inner
                     % product is 0.
-                    braStateMod = braState(braState ~= -1);
                     ketStateMod = ketState(ketState ~= -1);
                     
                     % SANITY CHECK: there should be nElec - 2 electrons remaining.

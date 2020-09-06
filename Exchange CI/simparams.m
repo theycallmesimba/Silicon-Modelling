@@ -44,9 +44,9 @@ sparams.CMEsLib_fPath = 'C:\Users\bbuonaco\Documents\MATLAB\Silicon-Modelling\Ex
 % sparams.dotLocations = [-20.0,0.0; 20,0.0]*1E-9; % Each row is a dot's
 % location (x,y)
 h = 2*sqrt(3);
-% sparams.dotLocations = [0,2/3*h;-2,-h/3;2,-h/3];
-d = 3;
-sparams.dotLocations = [d,0;3*d,0;-d,0;-3*d,0];
+sparams.dotLocations = [0,2/3*h;-2,-h/3;2,-h/3];
+% d = 3;
+% sparams.dotLocations = [d,0;3*d,0;-d,0;-3*d,0];
 [sparams.nDots,~] = size(sparams.dotLocations);
 
 %***Simulation definitions***%
@@ -65,14 +65,14 @@ sparams.nSingleOrbitals = sparams.nLocalOrbitals*(sparams.nLocalOrbitals+1)/2*sp
 sparams.nItinerantOrbitals = 3;
 % Sets the maximum value for the non shfited HO we will use when we rewrite
 % the basis of shifted HOs into non shifted HOs
-sparams.maxOriginHOsX = 11; %10; 
-sparams.maxOriginHOsY = 11; %10;
+sparams.maxOriginHOsX = 14; %10; 
+sparams.maxOriginHOsY = 14; %10;
 sparams.nOriginHOs = sparams.maxOriginHOsX*sparams.maxOriginHOsY;
 
 % Set tolerance level for norm checks
 sparams.normThreshold = 1E-10;
 
-sparams.numElectrons = 3;
+sparams.numElectrons = 2;
 % Used to specify which S_z spin subspaces you want to use for the many 
 % body calculation. For a 3 electron system, possible S_z values are 
 % [-3, -1, 1, 3]/2.  To use only the lowest two spin subspaces [-3/2, -1/2]

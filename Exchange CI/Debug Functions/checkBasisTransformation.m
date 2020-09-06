@@ -22,7 +22,7 @@ function checkBasisTransformation( sparams, gridparams, basis1, basis2, Tmatrix 
         
         if abs(currNorm - 1) >= sparams.normThreshold
             foundNonNorm = 1;
-            fprintf(1,'WARNING: Transformed state |%d> is not normalized: %g\n',ii,currNorm);
+            fprintf(1,'WARNING: Transformed state |%d> is not normalized: %g\n',ii,currNorm-1);
         end
         
         % Now plot the transformed wave function along with the

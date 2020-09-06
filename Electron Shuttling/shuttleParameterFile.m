@@ -30,7 +30,8 @@ sparams.tcThreshold = 0.0009; % Threshold value for the tunnel coupling
 sparams.voltagesToLoad{1} = 0.1;
 sparams.voltagesToLoad{2} = [0.2,0.22,0.24,0.26,0.27,0.28,0.29,0.3];
 sparams.voltagesToLoad{3} = [0.2,0.22,0.24,0.26,0.27,0.28,0.29,0.3];
-sparams.voltagesToLoad{4} = [0.2,0.22,0.24,0.26,0.27,0.28,0.29,0.3];
+% sparams.voltagesToLoad{4} = [0.2,0.22,0.24,0.26,0.27,0.28,0.29,0.3];
+sparams.voltagesToLoad{4} = [0.2,0.22];
 sparams.voltagesToLoad{5} = 0.1;
 sparams.numOfGates = length(sparams.voltagesToLoad);
 % griddedInterpolant requires at least 2 grid points to interpolate, so we
@@ -74,7 +75,7 @@ sparams.includeT2 = 0;
 
 % % Directory Parameters
 % Where to load potentials from for simulation
-sparams.potDir = 'C:\Users\bbuonaco\Documents\GitHub\Simulated Potentials\FiveGate_DSize_40_GSize_30\TEMPLATE_5Gate_Dop_1.358E15_noRGrid_';
+sparams.potDir = 'C:\Users\bbuonaco\Documents\MATLAB\Simulated Potentials\FiveGate_DSize_40_GSize_30\TEMPLATE_5Gate_Dop_1.358E15_noRGrid_';
 sparams.interpPotentials = 1; % Whether or not to interpolate the potentials in time domain for simulation
 sparams.interpType = 'linear'; % What type of interpolation of the potentials to do in time domain
 sparams.extrapType = 'linear';
