@@ -21,6 +21,9 @@ function analyzeEffectiveEnergySpectrum(sparams, effHamParams, variedVariable,..
     if sparams.includeOrbital
         nStates = 2*nStates;
     end
+    if sparams.includeExcitedOrbital
+        nStates = 2*nStates;
+    end
     if sparams.includeValley
         nStates = 2*nStates;
     end

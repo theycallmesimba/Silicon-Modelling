@@ -81,6 +81,15 @@ else
   perm = n+1-[keep(end:-1:1),keep(end:-1:1)-n,sys,sys-n];
   x = reshape(permute(reshape(p,[rdim,rdim]),perm),...
               [dimkeep,dimkeep,dimtrace^2]);
-  x = sum(x(:,:,[1:dimtrace+1:dimtrace^2]),3);
+  try
+     x = sum(x(:,:,[1:dimtrace+1:dimtrace^2]),3);
+  catch
+      temp = 1:dimtrace+1:dimtrace^2;
+      tempx = zeros(squeeze(size(x(:,:,1))));
+      for ii = 1:length(temp)
+          tempx = tempx + x(:,:,temp(ii));
+      end
+      x = tempx;
+  end
 
 end

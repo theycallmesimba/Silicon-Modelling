@@ -8,7 +8,7 @@ function Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams)
     % functionality in later)
     if sparams.includeExcitedOrbital
         if length(tc) == 1
-            HtcMat = [tc, tc, tc, tc];
+            HtcMat = [tc, tc; tc, tc];
         else
             HtcMat = [tc(1), tc(3); tc(2), tc(4)];
         end
@@ -16,6 +16,12 @@ function Heff = constructEffectiveHamiltonian( sparams, effHamiltonianParams)
         HdotR = [epsR, 0; 0, (epsR + ER)];
         
         Heff = kron([1 0;0 0],HdotL) + kron([0 1;0 0],HtcMat') + kron([0 0;1 0],HtcMat) + kron([0 0;0 1],HdotR);
+        
+        if sparams.includeValley
+            Hvalley = kron(kron([1 0;0 0],eye(2)),[0 deltaL;deltaL' 0]) + kron(kron([0 0;0 1],eye(2)),[0 deltaR;deltaR' 0]);
+            
+            Heff = kron(Heff,eye(2)) + Hvalley;
+        end
         return;
     end
     

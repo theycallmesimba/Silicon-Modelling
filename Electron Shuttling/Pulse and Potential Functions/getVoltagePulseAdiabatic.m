@@ -93,8 +93,8 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
     semilogy(qXPoints,adiabQPoints);
     ylabel('Adiabatic parameter [arb]','Interpreter','Latex');
     drawnow;
-%     pause(0.75);
-%     delete(fig);
+    pause(0.75);
+    delete(fig);
     
     % This flag is for if we just want a linear collection of voltage 
     % points and don't want to find the corresponding adiabatic pulse
@@ -165,7 +165,7 @@ function [sparams, voltagePulse, optPulseTime] = getVoltagePulseAdiabatic(...
         end
         drawnow;
     end
-%     delete(fig);
+    delete(fig);
     toc;
     
     voltagePulse = zeros(length(sparams.gatesUsedInPulse),sparams.nPulsePoints);

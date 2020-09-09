@@ -16,7 +16,7 @@ sparams.saveData = 1;
 sparams.updateWaitbar = 3000; % How many frames to wait before updating waitbar
 sparams.updateFigure = 3000; % How many frames to wait before updating figure
 sparams.updateInterpPot = 40000; % Interpolate the potential at 40000 points at a time
-sparams.nFigureFrames = 20; % How many frames of the simulation to save for outputted gif
+sparams.nFigureFrames = 50; % How many frames of the simulation to save for outputted gif
 sparams.nStoreDataFrames = 500; % How many times to save data
 
 % % Stark Shift Parameters
@@ -45,12 +45,14 @@ end
 sparams.voltagePulseBounds = [0.2,0.3;0.2,0.3;0.2,0.3];
 sparams.gatesUsedInPulse = [1,2,3]; % Specificies which gates in the geometry you will actually use in the voltage pulse
 sparams.nPulsePoints = length(sparams.gatesUsedInPulse)*500;
-sparams.adiabaticPulseType = 'effective';
+% sparams.adiabaticPulseType = 'effective';
+sparams.adiabaticPulseType = 'coherent';
 
 % % Adiabatic Parameters
 sparams.findAdiabaticPulse = 1; % 1 if you want to use adiabatic conditions to find a pulse
 % sparams.adiabaticThreshold = [[0.5,0.5]];
-sparams.adiabaticThreshold = [logspace(-.25,-3,40)', logspace(-.25,-3,40)'];
+% sparams.adiabaticThreshold = [logspace(-.25,-3,40)', logspace(-.25,-3,40)'];
+sparams.adiabaticThreshold = [0.080139, 0.080139; 0.018588, 0.018588];
 sparams.hdt = 1E-15; % The h value used to find the time derivative of the wave function
 sparams.timePowerBounds = [-15,-7]; % Range of 10^N time values to search in when doing optimizing the adiabatic parameter
 sparams.nnIndices = 1;

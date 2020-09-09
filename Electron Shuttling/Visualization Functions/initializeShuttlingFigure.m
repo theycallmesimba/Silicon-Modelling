@@ -30,7 +30,7 @@ function fig = initializeShuttlingFigure( sparams, vPulse, wf1, wf2, xx, time )
 %     CBoffset = -2.2747;
 %     vvTemp = vvInitial/sparams.ee - CBoffset;
     plot(xx,vvInitial/sparams.ee,'Linewidth',2);
-    plot(xx,vvTemp,'Linewidth',2);
+%     plot(xx,vvTemp,'Linewidth',2);
     ylabel('Energy [eV]','Interpreter','Latex','Fontsize',labelFontSize);
     
     yyaxis right
